@@ -7,7 +7,7 @@ import Login from './components/Auth/Login';
 import SignUp from './components/Auth/SignUp';
 import ChairSelection from './components/Dashboard/ChairSelection';
 import ChairMonitor from './components/Dashboard/ChairMonitor';
-
+import ChairActivityLog from './components/Dashboard/ChairActivityLog';
 // Private route wrapper
 const PrivateRoute = ({ children }) => {
   const { currentUser } = useAuth();
@@ -27,6 +27,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           
+            <Route path="/chair-activity/:chairId" element={<ChairActivityLog />} />    
           <Route path="/chair-selection" element={
             <PrivateRoute>
               <ChairSelection />

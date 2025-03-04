@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, update, push, set, get } from 'firebase/database';
 import { database } from '../../config/firebase';
 
 const ChairMonitor = () => {
@@ -9,21 +9,503 @@ const ChairMonitor = () => {
   const [chairData, setChairData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const [showHydrationAlert, setShowHydrationAlert] = useState(false);
+  
+  // State for critical values
+  const [totalMinutes, setTotalMinutes] = useState(0);
+  const [currentSessionMinutes, setCurrentSessionMinutes] = useState(0);
+  const [positionChanges, setPositionChanges] = useState(0);
+  
+  // Refs for tracking
+  const sittingStartTimeRef = useRef(0);
+  const prevMinutesRef = useRef(0);
+  const currentMinutesRef = useRef(0);
+  const positionChangesRef = useRef(0);
+  const lastPositionRef = useRef(null);
+  const currentStateRef = useRef(null);
+  const sittingTimerRef = useRef(null);
+  const firebaseStateRef = useRef(null);
+  const processingStateChangeRef = useRef(false);
+  const timerIntervalRef = useRef(null);
+ 
   useEffect(() => {
+    // Immediately clear any existing interval
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+  
+    const chairStateRef = ref(database, `chairs/${chairId}/chairState`);
+    
+    const unsubscribeState = onValue(chairStateRef, (stateSnapshot) => {
+      const chairState = stateSnapshot.val();
+  
+      console.log('Chair State:', chairState);
+  
+      // Comprehensive interval stopping
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+  
+      // Reset timer logic
+      if (chairState !== 'sitting') {
+        // Accumulate previous time
+        if (currentMinutesRef.current > 0) {
+          prevMinutesRef.current += currentMinutesRef.current;
+          setTotalMinutes(prevMinutesRef.current);
+          
+          const chairRef = ref(database, `chairs/${chairId}`);
+          update(chairRef, {
+            prev_timer: prevMinutesRef.current,
+            current_timer: 0
+          });
+        }
+  
+        // Explicitly reset current timer
+        currentMinutesRef.current = 0;
+        setCurrentSessionMinutes(0);
+  
+        // Additional safeguard: ensure no interval is running
+        console.log('Stopping timer due to non-sitting state');
+      }
+  
+      // Only start timer for sitting state
+      if (chairState === 'sitting') {
+        timerIntervalRef.current = setInterval(() => {
+          currentMinutesRef.current += (1/60);
+          setCurrentSessionMinutes(currentMinutesRef.current);
+  
+          const chairRef = ref(database, `chairs/${chairId}`);
+          update(chairRef, {
+            current_timer: currentMinutesRef.current
+          }).catch(err => {
+            console.error("Error updating current minutes:", err);
+          });
+        }, 1000);
+      }
+    });
+  
+    return () => {
+      unsubscribeState();
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    };
+  }, [chairId]);
+  // Update current minutes in Firebase
+  const updateCurrentMinutesInFirebase = (minutes) => {
+    const chairRef = ref(database, `chairs/${chairId}`);
+    update(chairRef, {
+      current_timer: minutes
+    }).catch(err => {
+      console.error("Error updating current minutes:", err);
+    });
+  };
+
+  // Set hydration reminder
+  const setHydrationReminder = () => {
+    if (sittingTimerRef.current) {
+      clearTimeout(sittingTimerRef.current);
+    }
+    
+    sittingTimerRef.current = setTimeout(() => {
+      setShowHydrationAlert(true);
+      
+      // Update hydration status in Firebase
+      const hydrationRef = ref(database, `chairs/${chairId}/hydration`);
+      set(hydrationRef, 1);
+      
+      // Record hydration reminder in reports
+      addToReports({
+        type: 'hydrationReminder',
+        sittingDuration: currentMinutesRef.current.toFixed(2)
+      });
+    }, 5 * 60 * 1000); // 5 minutes
+  };
+
+ 
+  // Update previous and current minutes in Firebase
+  
+  // Dismiss hydration alert
+  const dismissHydrationAlert = () => {
+    setShowHydrationAlert(false);
+    
+    // Update hydration status in Firebase
+    const hydrationRef = ref(database, `chairs/${chairId}/hydration`);
+    set(hydrationRef, 0);
+    
+    // Record hydration dismissal in reports
+    addToReports({
+      type: 'hydrationDismissed'
+    });
+    
+    // Reset timer for next alert
+    if (sittingTimerRef.current) {
+      clearTimeout(sittingTimerRef.current);
+    }
+    
+    // Set next reminder
+    setHydrationReminder();
+  };
+
+  // Update position changes in Firebase
+  const updatePositionChanges = (changes) => {
+    const chairRef = ref(database, `chairs/${chairId}`);
+    
+    // Update Firebase with position changes
+    update(chairRef, {
+      positionChanges: changes
+    }).catch(err => {
+      console.error("Error updating position changes:", err);
+    });
+  };
+
+  // Update chair state in Firebase to track transitions
+  const updateChairState = async (newState) => {
+    try {
+      const chairStateRef = ref(database, `chairs/${chairId}/chairState`);
+      await set(chairStateRef, newState);
+      firebaseStateRef.current = newState;
+      console.log(`Updated chair state in Firebase to: ${newState}`);
+    } catch (err) {
+      console.error("Error updating chair state:", err);
+    }
+  };
+
+  // Add to reports with simplified date-based structure
+  const addToReports = async (data) => {
+    // Get current date formatted as YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]; 
+    
+    try {
+      // Reference to the reports location for this chair and date
+      const reportsRef = ref(database, `chairs/${chairId}/reports/${today}/events`);
+      
+      // Push new report data with timestamp
+      const newReportRef = push(reportsRef);
+      
+      await set(newReportRef, {
+        timestamp: new Date().toISOString(),
+        ...data
+      });
+      
+      // For sittingSession events, update today's total minutes
+      if (data.type === 'sittingSession' && data.duration) {
+        // Update summary in Firebase
+        const summaryRef = ref(database, `chairs/${chairId}/reports/${today}/summary`);
+        update(summaryRef, {
+          totalMinutes: prevMinutesRef.current
+        });
+      }
+      
+      console.log(`Added report: ${data.type}`, data);
+    } catch (err) {
+      console.error("Error adding report:", err);
+    }
+  };
+
+  // Handle state changes
+  const handleStateChange = async (newState, position) => {
+    // Prevent concurrent state changes
+    if (processingStateChangeRef.current) {
+      console.log("Already processing a state change, skipping...");
+      return;
+    }
+    
+    processingStateChangeRef.current = true;
+    
+    console.log("Handling state change:", { 
+      currentState: currentStateRef.current,
+      newState, 
+      position,
+      firebaseState: firebaseStateRef.current
+    });
+
+    try {
+      // Check if position changed without state change
+      if (currentStateRef.current === newState && lastPositionRef.current !== position && newState === 'sitting') {
+        // Increment position change counter
+        positionChangesRef.current += 1;
+        setPositionChanges(positionChangesRef.current);
+        
+        // Update position changes in Firebase
+        updatePositionChanges(positionChangesRef.current);
+        
+        // Log position change
+        addToReports({
+          type: 'positionChange',
+          oldPosition: lastPositionRef.current,
+          newPosition: position,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Update current position
+        lastPositionRef.current = position;
+        processingStateChangeRef.current = false;
+        return;
+      }
+      
+      // If state is the same as what's in Firebase, don't process again
+      if (newState === firebaseStateRef.current && currentStateRef.current === newState) {
+        lastPositionRef.current = position;
+        processingStateChangeRef.current = false;
+        return;
+      }
+      
+      // Now handle actual state transitions
+      
+      // Step 1: End previous state if different
+      if (currentStateRef.current && currentStateRef.current !== newState) {
+        console.log(`Ending state: ${currentStateRef.current}`);
+        
+        // Handle specific end state actions
+        if (currentStateRef.current === 'sitting') {
+          // Person was sitting but is now leaving
+          
+          addToReports({
+            type: 'personLeft',
+            timestamp: new Date().toISOString()
+          });
+        } 
+        else if (currentStateRef.current === 'objectPlaced') {
+          addToReports({
+            type: 'objectRemoved',
+            timestamp: new Date().toISOString()
+          });
+        }
+        else if (currentStateRef.current === 'absent') {
+          addToReports({
+            type: 'emptyRemoved',
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+      
+      // Step 2: Start new state
+      console.log(`Starting state: ${newState}`);
+      
+      if (newState === 'sitting') {
+        // Start a new sitting session
+        
+        addToReports({
+          type: 'personSitting',
+          position: position,
+          timestamp: new Date().toISOString()
+        });
+      } 
+      else if (newState === 'objectPlaced') {
+        addToReports({
+          type: 'objectPlaced',
+          timestamp: new Date().toISOString()
+        });
+      } 
+      else if (newState === 'absent') {
+        addToReports({
+          type: 'empty',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Update current state locally
+      currentStateRef.current = newState;
+      lastPositionRef.current = position;
+      
+      // Update state in Firebase
+      await updateChairState(newState);
+      
+    } catch (error) {
+      console.error("Error in state transition:", error);
+    } finally {
+      processingStateChangeRef.current = false;
+    }
+  };
+
+  // Determine chair state based on sensor data
+  const determineChairState = (data) => {
+    if (!data) return { state: 'unknown', position: 'Unknown' };
+    
+    const { leftarm, rightarm, leftleg, rightleg, weight } = data;
+    const allSensorsActive = leftarm > 0 && rightarm > 0 && leftleg > 0 && rightleg > 0;
+    const anySensorActive = leftarm > 0 || rightarm > 0 || leftleg > 0 || rightleg > 0;
+    
+    // Empty chair - no weight
+    if (weight <= 0) {
+      return { state: 'absent', position: 'Empty' };
+    }
+    
+    // Object placed - weight but no sensors active
+    if (weight > 0 && !anySensorActive) {
+      return { state: 'objectPlaced', position: 'Object Placed' };
+    }
+    
+    // Person sitting - weight and sensors active
+    if (weight > 0 && anySensorActive) {
+      // Determine position
+      let position = 'Irregular';
+      
+      if (allSensorsActive) {
+        position = 'Balanced';
+      } else if (leftarm > 0 && leftleg > 0 && (rightarm <= 0 || rightleg <= 0)) {
+        position = 'Leaning Left';
+      } else if (rightarm > 0 && rightleg > 0 && (leftarm <= 0 || leftleg <= 0)) {
+        position = 'Leaning Right';
+      } else if ((leftarm <= 0 && rightarm <= 0) && (leftleg > 0 && rightleg > 0)) {
+        position = 'Forward Slouch';
+      } else if ((leftarm > 0 && rightarm > 0) && (leftleg <= 0 && rightleg <= 0)) {
+        position = 'Slouching Back';
+      }
+      
+      return { state: 'sitting', position };
+    }
+    
+    return { state: 'unknown', position: 'Unknown' };
+  };
+
+  // Setup chair monitoring
+  useEffect(() => {
+    // Setup hydration reminder timer ref
+    sittingTimerRef.current = null;
+    
+    // Check initial chair state from Firebase
+    const checkInitialState = async () => {
+      try {
+        // Check chair state
+        const chairStateRef = ref(database, `chairs/${chairId}/chairState`);
+        const snapshot = await get(chairStateRef);
+        
+        if (snapshot.exists()) {
+          const storedState = snapshot.val();
+          firebaseStateRef.current = storedState;
+          currentStateRef.current = storedState;
+        } else {
+          // Initialize if not exists
+          await set(chairStateRef, 'absent');
+          firebaseStateRef.current = 'absent';
+          currentStateRef.current = 'absent';
+        }
+        
+        // Load chair data (prev timer, current timer, position changes)
+        const chairDataRef = ref(database, `chairs/${chairId}`);
+        const dataSnapshot = await get(chairDataRef);
+        
+        if (dataSnapshot.exists()) {
+          const chairData = dataSnapshot.val();
+          
+          // Load previous timer value
+          if (chairData.prev_timer !== undefined) {
+            prevMinutesRef.current = parseFloat(chairData.prev_timer);
+            setTotalMinutes(prevMinutesRef.current);
+          } else {
+            // Initialize if not exists
+            const chairRef = ref(database, `chairs/${chairId}`);
+            update(chairRef, { prev_timer: 0 });
+            prevMinutesRef.current = 0;
+          }
+          
+          // Load current timer value
+          if (chairData.current_timer !== undefined) {
+            currentMinutesRef.current = parseFloat(chairData.current_timer);
+            setCurrentSessionMinutes(currentMinutesRef.current);
+          } else {
+            // Initialize if not exists
+            const chairRef = ref(database, `chairs/${chairId}`);
+            update(chairRef, { current_timer: 0 });
+            currentMinutesRef.current = 0;
+          }
+          
+          // Load position changes
+          if (chairData.positionChanges !== undefined) {
+            positionChangesRef.current = parseInt(chairData.positionChanges);
+            setPositionChanges(positionChangesRef.current);
+          }
+          
+          // Check if there's an active sitting timer
+          if (chairData.sittingTimer && chairData.sittingTimer.isActive && chairData.sittingTimer.startTime) {
+            const startTime = new Date(chairData.sittingTimer.startTime);
+            sittingStartTimeRef.current = startTime;
+       
+            
+            // Start timer UI update and Firebase update
+            timerIntervalRef.current = setInterval(() => {
+              if (sittingStartTimeRef.current) {
+                const elapsedTime = (new Date() - sittingStartTimeRef.current) / (1000 * 60);
+                const currentMins = parseFloat(elapsedTime.toFixed(2));
+                
+                // Update local state
+                // currentMinutesRef.current = currentMins;
+                // setCurrentSessionMinutes(currentMins);
+                
+                // Update Firebase current timer every second
+                // updateCurrentMinutesInFirebase(currentMins);
+              }
+            }, 1000);
+            
+            // Set hydration reminder
+            setHydrationReminder();
+          }
+        } else {
+          // Initialize chair data if it doesn't exist
+          const chairRef = ref(database, `chairs/${chairId}`);
+          update(chairRef, { 
+            prev_timer: 0,
+            current_timer: 0,
+            positionChanges: 0
+          });
+          
+          prevMinutesRef.current = 0;
+          currentMinutesRef.current = 0;
+          positionChangesRef.current = 0;
+        }
+      } catch (err) {
+        console.error("Error loading chair data:", err);
+      }
+    };
+    
+    checkInitialState();
+    
+    // Monitor chair data
     const chairRef = ref(database, `chairs/${chairId}`);
     
     const unsubscribe = onValue(chairRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         
-        // Process the raw data to determine sitting position and occupancy
+        // Skip processing if we're already handling a state change
+        if (processingStateChangeRef.current) {
+          console.log("Skipping sensor data update - already processing state change");
+          return;
+        }
+        
+        // Determine chair state from sensors
+        const { state, position } = determineChairState(data);
+        
+        // Handle state changes
+        handleStateChange(state, position);
+        
+        // Get today's date
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Process the data for display
         const processedData = {
           ...data,
-          isOccupied: data.weight > 0,
-          isPersonSitting: data.weight > 0 && (data.leftarm || data.leftleg || data.rightarm || data.rightleg), // Updated logic
-          sittingPosition: determineSittingPosition(data),
-          positionWarning: getPositionWarning(data)
+          chairState: state,
+          sittingPosition: position,
+          isOccupied: state === 'sitting' || state === 'objectPlaced',
+          isPersonSitting: state === 'sitting',
+          isObjectPlaced: state === 'objectPlaced',
+          isEmpty: state === 'absent',
+          
+          // Time tracking
+          prevTimer: prevMinutesRef.current, // Previous accumulated minutes
+          currentTimer: currentMinutesRef.current, // Current session minutes
+          totalMinutes: prevMinutesRef.current + currentMinutesRef.current, // Total (prev + current)
+          
+          positionChanges: positionChangesRef.current,
+          
+          showHydrationAlert: showHydrationAlert,
+          today: today // Include today's date
         };
 
         setChairData(processedData);
@@ -36,67 +518,68 @@ const ChairMonitor = () => {
       setLoading(false);
     });
     
-    return () => unsubscribe();
-  }, [chairId]);
-
-  // Helper function to determine sitting position based on sensor data
-  const determineSittingPosition = (data) => {
-    // Default position
-    if (!data) return 'Unknown';
+    // Load today's report data
+    loadReportData();
     
-    const { leftarm, leftleg, rightarm, rightleg } = data;
-    
-    // If no sensors are active but there's weight, it's an object
-    if (data.weight > 0 && !leftarm && !leftleg && !rightarm && !rightleg) {
-      return 'Object Placed';
-    }
-    
-    // If all sensors are active, the position is balanced
-    if (leftarm && leftleg && rightarm && rightleg) {
-      return 'Balanced';
-    }
-    
-    // Leaning left
-    if (leftarm && leftleg && (!rightarm || !rightleg)) {
-      return 'Leaning Left';
-    }
-    
-    // Leaning right
-    if (rightarm && rightleg && (!leftarm || !leftleg)) {
-      return 'Leaning Right';
-    }
-    
-    // Forward slouch - more weight on legs, less on arms
-    if ((!leftarm && !rightarm) && (leftleg && rightleg)) {
-      return 'Forward Slouch';
-    }
-    
-    // Slouching back - more weight on arms, less on legs
-    if ((leftarm && rightarm) && (!leftleg && !rightleg)) {
-      return 'Slouching Back';
-    }
-    
-    // Irregular pattern, possibly fidgeting or shifting
-    return 'Irregular';
-  };
-
-  // Generate position warnings based on sitting position
-  const getPositionWarning = (data) => {
-    if (!data) return null;
-    
-    const position = determineSittingPosition(data);
-    
-    const warnings = {
-      'Leaning Left': 'You are leaning too much to the left. Try to balance your weight.',
-      'Leaning Right': 'You are leaning too much to the right. Try to balance your weight.',
-      'Forward Slouch': 'You are slouching forward. Try to sit up straight.',
-      'Slouching Back': 'You are slouching back. Try to maintain an upright posture.',
-      'Irregular': 'Your sitting position is irregular. Try to maintain a consistent posture.'
+    // Cleanup on unmount
+    return () => {
+      unsubscribe();
+      
+      // Stop sitting timer if active
+      
+      
+      // Clear timers
+      if (sittingTimerRef.current) {
+        clearTimeout(sittingTimerRef.current);
+      }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      
+      // Reset hydration status
+      const hydrationRef = ref(database, `chairs/${chairId}/hydration`);
+      set(hydrationRef, 0);
     };
-    
-    return warnings[position] || null;
+  }, [chairId]);
+  
+  // Load report data
+   const loadReportData = async () => {
+    try {
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Ensure today's reports summary exists
+      const reportsRef = ref(database, `chairs/${chairId}/reports/${today}/summary`);
+      const reportsSnapshot = await get(reportsRef);
+      
+      if (!reportsSnapshot.exists()) {
+        // Initialize summary if it doesn't exist
+        set(reportsRef, {
+          totalMinutes: prevMinutesRef.current,
+          date: today
+        });
+      }
+    } catch (err) {
+      console.error("Error loading report data:", err);
+    }
   };
 
+  // Navigate to activity log
+  const navigateToActivityLog = () => {
+    navigate(`/chair-activity/${chairId}`);
+  };
+  // Render the component
+  if (loading) {
+    return <div className="loading">Loading chair data...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  if (!chairData) {
+    return <div className="no-data">No chair data available</div>;
+  }
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-100">
       <div className="w-full max-w-4xl px-8 py-10 mx-4 bg-white rounded-xl shadow-lg">
@@ -113,13 +596,52 @@ const ChairMonitor = () => {
               <p className="text-gray-600">Smart Chair Monitoring System</p>
             </div>
           </div>
-          <button
-            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            onClick={() => navigate('/chair-selection')}
-          >
-            Back to Chairs
-          </button>
+          <div className="flex space-x-3">
+            <button
+              className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              onClick={navigateToActivityLog}
+            >
+              View Activity Log
+            </button>
+            <button
+              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onClick={() => navigate('/chair-selection')}
+            >
+              Back to Chairs
+            </button>
+          </div>
         </div>
+        
+        {/* Login Time Info */}
+        {chairData?.loginTime && (
+          <div className="mb-4 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Session started:</span> {new Date(chairData.loginTime).toLocaleString()}
+            </p>
+          </div>
+        )}
+        
+        {/* Hydration Alert */}
+        {showHydrationAlert && chairData?.isPersonSitting && (
+          <div className="mb-6 p-4 bg-blue-100 border-l-4 border-blue-500 rounded-lg flex items-start justify-between">
+            <div className="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-blue-700">
+                <span className="font-bold">Hydration Reminder:</span> You've been sitting for 0.1+ minutes. Consider getting up for a water break.
+              </p>
+            </div>
+            <button 
+              onClick={dismissHydrationAlert}
+              className="ml-4 text-blue-500 hover:text-blue-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
         
         {/* Loading State */}
         {loading ? (
@@ -306,12 +828,12 @@ const ChairMonitor = () => {
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <p className="text-sm text-gray-600">Total Hours Today</p>
+                <p className="text-sm text-gray-600">Current session</p>
                   <div className="mt-2 flex items-end">
                     <p className="text-2xl font-semibold text-blue-600">
-                      {chairData.hours || 0}
+                      {currentSessionMinutes.toFixed(2)}
                     </p>
-                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">hrs</span>
+                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">mins</span>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
                     <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((chairData.hours || 0) * 10, 100)}%` }}></div>
@@ -319,12 +841,12 @@ const ChairMonitor = () => {
                 </div>
                 
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <p className="text-sm text-gray-600">Average Daily Hours</p>
+                <p className="text-sm text-gray-600">Today's sitting time</p>
                   <div className="mt-2 flex items-end">
                     <p className="text-2xl font-semibold text-blue-600">
-                      {chairData.avgDailyHours || 3.5}
+                      {totalMinutes.toFixed(2)}
                     </p>
-                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">hrs</span>
+                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">mins</span>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
                     <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((chairData.avgDailyHours || 3.5) * 10, 100)}%` }}></div>
@@ -335,69 +857,118 @@ const ChairMonitor = () => {
                   <p className="text-sm text-gray-600">Position Changes</p>
                   <div className="mt-2 flex items-end">
                     <p className="text-2xl font-semibold text-blue-600">
-                      {chairData.positionChanges || 12}
+                      {chairData.positionChanges || 0}
                     </p>
                     <span className="text-sm font-normal text-gray-600 ml-1 mb-1">today</span>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((chairData.positionChanges || 12) * 5, 100)}%` }}></div>
+                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((chairData.positionChanges || 0) * 5, 100)}%` }}></div>
                   </div>
                 </div>
               </div>
             </div>
             
             {/* Recommendations */}
-            <div className="p-6 bg-blue-50 rounded-lg border border-blue-100">
-              <h2 className="mb-4 text-lg font-semibold text-blue-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Recommendations
-              </h2>
-              <div className="space-y-3">
-                {(chairData.hours || 0) > 2 && (
-                  <div className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                    <p className="text-blue-800">
-                      You've been sitting for over {chairData.hours} hours today. Consider taking a short walk.
-                    </p>
-                  </div>
-                )}
-                {chairData.positionWarning && (
-                  <div className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                    <p className="text-blue-800">
-                      {chairData.positionWarning}
-                    </p>
-                  </div>
-                )}
-                <div className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                  <p className="text-blue-800">
-                    Remember to stand up and stretch every 30 minutes for optimal health.
-                  </p>
-                </div>
-                <div className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                  <p className="text-blue-800">
-                    Keep your feet flat on the floor and maintain a 90-degree angle at your knees and hips.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+<div className="p-6 bg-blue-50 rounded-lg border border-blue-100">
+  <h2 className="mb-4 text-lg font-semibold text-blue-800 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    Health Recommendations
+  </h2>
+  
+  <div className="space-y-4">
+
+{chairData.isPersonSitting && chairData.minutes > 120 && (
+  <div className="flex items-start">
+    <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
     </div>
-  );
-};
+    <div>
+      <h3 className="text-md font-medium text-blue-800">Take a Break</h3>
+      <p className="text-sm text-blue-700">You've been sitting for {chairData.minutes} minutes today. Consider taking a 5-minute break to stretch and move around.</p>
+    </div>
+  </div>
+)}
+    
+    {chairData.isPersonSitting && chairData.positionChanges < 5 && chairData.hours > 1 && (
+      <div className="flex items-start">
+        <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-md font-medium text-blue-800">Change Position</h3>
+          <p className="text-sm text-blue-700">Try to shift positions more frequently. Aim for at least 8-10 position changes per hour to improve circulation.</p>
+        </div>
+      </div>
+    )}
+    
+    {chairData.positionWarning && (
+      <div className="flex items-start">
+        <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-md font-medium text-blue-800">Improve Posture</h3>
+          <p className="text-sm text-blue-700">{chairData.positionWarning} A balanced posture can reduce strain on your back and neck.</p>
+        </div>
+      </div>
+    )}
+    
+    {chairData.avgDailyHours > 5 && (
+      <div className="flex items-start">
+        <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-md font-medium text-blue-800">Reduce Sitting Time</h3>
+          <p className="text-sm text-blue-700">Your average daily sitting time of {chairData.avgDailyHours} hours is high. Try to incorporate more standing or walking activities throughout your day.</p>
+        </div>
+      </div>
+    )}
+    
+    {!chairData.isPersonSitting && chairData.hours > 0 && (
+      <div className="flex items-start">
+        <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-md font-medium text-blue-800">Good Job!</h3>
+          <p className="text-sm text-blue-700">You're currently taking a break from sitting. Keep up the good work by staying active!</p>
+        </div>
+      </div>
+    )}
+    
+    {chairData.hours === 0 && (
+      <div className="flex items-start">
+        <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-md font-medium text-blue-800">Ready to Start</h3>
+          <p className="text-sm text-blue-700">No sitting data recorded today. Remember to take breaks every 30 minutes when you start using the chair.</p>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+</div>
+      )}
+    </div>
+  </div>
+); 
+}; 
 
 export default ChairMonitor;
