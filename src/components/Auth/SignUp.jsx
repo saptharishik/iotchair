@@ -1,34 +1,97 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const SignUp = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const NFCReader = () => {
+  const [isReading, setIsReading] = useState(false);
+  const [nfcSupported, setNfcSupported] = useState(false);
+  const [lastTagData, setLastTagData] = useState(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const [logs, setLogs] = useState([]);
   const navigate = useNavigate();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    if (password !== confirmPassword) {
-      return setError('Passwords do not match');
+  // Check if NFC is supported
+  useEffect(() => {
+    if ('NDEFReader' in window) {
+      setNfcSupported(true);
+    } else {
+      setError('NFC is not supported in this browser or device.');
     }
+  }, []);
 
+  // Add to log function
+  const addToLog = (message) => {
+    setLogs(prevLogs => [
+      { id: Date.now(), message, timestamp: new Date().toLocaleTimeString() },
+      ...prevLogs.slice(0, 9) // Keep only the last 10 logs
+    ]);
+  };
+
+  // Handle NFC tag reading
+  const startNFCReader = async () => {
+    if (!nfcSupported) return;
+    
+    setIsReading(true);
+    setError('');
+    
     try {
-      setError('');
-      setLoading(true);
-      await signup(email, password);
-      navigate('/chair-selection');
+      const ndef = new window.NDEFReader();
+      addToLog("Starting NFC scan...");
+      
+      await ndef.scan();
+      addToLog("NFC scan started successfully");
+      
+      ndef.addEventListener("reading", ({ message, serialNumber }) => {
+        const tagData = {
+          serialNumber,
+          records: parseNFCMessage(message)
+        };
+        
+        setLastTagData(tagData);
+        addToLog(`Tag detected! Serial: ${serialNumber}`);
+        
+        // Handle tag data here - could navigate based on tag data
+        // e.g., navigate(`/chair/${serialNumber}`);
+      });
+
+      ndef.addEventListener("readingerror", () => {
+        setError("Error reading NFC tag");
+        addToLog("Error reading NFC tag");
+      });
     } catch (error) {
-      setError('Failed to create an account: ' + error.message);
-    } finally {
-      setLoading(false);
+      setIsReading(false);
+      setError(`Error starting NFC reader: ${error.message}`);
+      addToLog(`Error: ${error.message}`);
     }
-  }
+  };
+
+  // Stop NFC reading
+  const stopNFCReader = () => {
+    setIsReading(false);
+    addToLog("NFC scanning stopped");
+  };
+
+  // Parse NFC message
+  const parseNFCMessage = (message) => {
+    const records = [];
+    for (const record of message.records) {
+      try {
+        if (record.recordType === "text") {
+          const textDecoder = new TextDecoder();
+          const text = textDecoder.decode(record.data);
+          records.push({ type: "text", data: text });
+        } else if (record.recordType === "url") {
+          const textDecoder = new TextDecoder();
+          const url = textDecoder.decode(record.data);
+          records.push({ type: "url", data: url });
+        } else {
+          records.push({ type: record.recordType, data: "Data in unsupported format" });
+        }
+      } catch (e) {
+        records.push({ type: "unknown", data: "Failed to parse record" });
+      }
+    }
+    return records;
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-100">
@@ -38,159 +101,119 @@ const SignUp = () => {
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2v6m0 12v2M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24M14.83 9.17l4.24-4.24" />
+                <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8" />
+                <polygon points="18 2 22 6 12 16 8 16 8 12 18 2" />
               </svg>
             </div>
           </div>
           
           <h1 className="text-3xl font-bold text-gray-800">Smart Chair</h1>
-          <p className="mt-2 text-gray-600">Create your Sedentary Monitor account</p>
+          <p className="mt-2 text-gray-600">NFC Tag Reader</p>
         </div>
         
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
+        {/* Status and Controls */}
+        <div className="mb-6">
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
               {error}
             </div>
           )}
           
-          <div className="mb-4">
-            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-              </div>
-              <input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+          {!nfcSupported && (
+            <div className="mb-4 p-3 bg-yellow-100 text-yellow-700 rounded-lg">
+              NFC is not supported in this browser or device. Please use a device and browser with NFC capabilities.
+            </div>
+          )}
+          
+          <div className="flex justify-center mb-6">
+            <div className={`w-32 h-32 rounded-full flex items-center justify-center ${isReading ? 'animate-pulse bg-green-100' : 'bg-gray-100'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-16 w-16 ${isReading ? 'text-green-500' : 'text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4" />
+                <path d="M5 19.5C5.5 18 6 15 6 12c0-.7.12-1.37.34-2" />
+                <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+                <path d="M12 10a2 2 0 0 1 2 2" />
+                <path d="M10 12a2 2 0 0 1 2-2" />
+                <path d="M8.24 16.58A6 6 0 0 0 12 18c2.4 0 4.52-1.41 5.5-3.5" />
+              </svg>
             </div>
           </div>
           
-          <div className="mb-4">
-            <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Must be at least 8 characters
+          <div className="text-center mb-4">
+            <p className="text-lg font-medium">
+              {isReading ? 'Scanning for NFC tags...' : 'Ready to scan'}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              {isReading ? 'Hold your device near an NFC tag' : 'Press the button below to start scanning'}
             </p>
           </div>
           
-          <div className="mb-6">
-            <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-gray-700">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <input
-                id="confirm-password"
-                type="password"
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            onClick={isReading ? stopNFCReader : startNFCReader}
+            disabled={!nfcSupported}
+            className={`w-full py-3 px-4 text-white rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              isReading 
+                ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' 
+                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+            } ${!nfcSupported ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {isReading ? 'Stop Scanning' : 'Start NFC Scan'}
           </button>
-        </form>
+        </div>
         
-        {/* Social Signup Options */}
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 text-gray-500 bg-white">
-                Or sign up with
-              </span>
+        {/* Last Tag Data */}
+        {lastTagData && (
+          <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="text-lg font-medium text-gray-800 mb-2">Last Tag Read</h3>
+            <p className="text-sm text-gray-600 mb-1">
+              <span className="font-medium">Serial Number:</span> {lastTagData.serialNumber}
+            </p>
+            <div className="mt-2">
+              <h4 className="text-sm font-medium text-gray-700 mb-1">Records:</h4>
+              {lastTagData.records.length > 0 ? (
+                <ul className="text-sm">
+                  {lastTagData.records.map((record, index) => (
+                    <li key={index} className="mb-1 p-2 bg-white rounded border border-gray-200">
+                      <span className="font-medium">{record.type}:</span> {record.data}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No records found in tag</p>
+              )}
             </div>
           </div>
-          
-          <div className="grid grid-cols-2 gap-3 mt-6">
-            <button
-              type="button"
-              className="w-full py-2 px-4 flex justify-center items-center bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
-              </svg>
-              Google
-            </button>
-            <button
-              type="button"
-              className="w-full py-2 px-4 flex justify-center items-center bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13.397 20.997v-8.196h2.765l.411-3.209h-3.176V7.548c0-.926.258-1.56 1.587-1.56h1.684V3.127A22.336 22.336 0 0 0 14.201 3c-2.444 0-4.122 1.492-4.122 4.231v2.355H7.332v3.209h2.753v8.202h3.312z" />
-              </svg>
-              Facebook
-            </button>
+        )}
+        
+        {/* Activity Log */}
+        <div className="mt-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-2">Activity Log</h3>
+          <div className="border border-gray-200 rounded-lg bg-gray-50 h-40 overflow-y-auto p-2">
+            {logs.length > 0 ? (
+              <ul className="text-sm">
+                {logs.map(log => (
+                  <li key={log.id} className="mb-1 text-gray-600">
+                    <span className="text-gray-400 text-xs">{log.timestamp}</span> - {log.message}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-500 p-2">No activity yet</p>
+            )}
           </div>
         </div>
         
-        {/* Terms */}
-        <div className="mt-6">
-          <p className="text-xs text-center text-gray-600">
-            By signing up, you agree to our{' '}
-            <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>{' '}
-            and{' '}
-            <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>.
-          </p>
-        </div>
-        
-        {/* Login link */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign in
-            </Link>
-          </p>
+        {/* Navigation */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate('/')}
+            className="text-blue-600 hover:text-blue-500 text-sm font-medium"
+          >
+            Back to Home
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default SignUp;
+export default NFCReader;
