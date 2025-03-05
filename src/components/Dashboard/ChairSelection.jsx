@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ref, get, query, orderByChild, equalTo, query, orderByChild, equalTo } from 'firebase/database';
+import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
 
-const NFCChairSelection = () => {
+
 const NFCChairSelection = () => {
   const [chairs, setChairs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,52 +47,7 @@ const NFCChairSelection = () => {
     fetchChairs();
   }, []);
 
-  const handleNFCScan = async () => {
-    if (!nfcSupported) {
-      setReadingStatus('Web NFC is not supported in this browser');
-      return;
-    }
-    try {
-      setReadingStatus('Scanning for chair...');
-      const ndef = new NDEFReader();
-      
-      await ndef.scan();
-      ndef.addEventListener("reading", async ({ message }) => {
-        let chairId = '';
-        for (const record of message.records) {
-          if (record.recordType === "text") {
-            const textDecoder = new TextDecoder();
-            chairId = textDecoder.decode(record.data).trim();
-            break;
-          }
-        }
-
-        // Verify chair exists in database
-        if (chairId) {
-          try {
-            const chairRef = ref(database, `chairs/${chairId}`);
-            const snapshot = await get(chairRef);
-            
-            if (snapshot.exists()) {
-              setReadingStatus(`Chair ${chairId} found!`);
-              navigate(`/chair/${chairId}`);
-            } else {
-              setReadingStatus(`No chair found with ID: ${chairId}`);
-            }
-          } catch (error) {
-            setReadingStatus(`Error verifying chair: ${error.message}`);
-          }
-        }
-      });
-
-      ndef.addEventListener("error", (event) => {
-        setReadingStatus(`Error: ${event.message}`);
-      });
-    } catch (error) {
-      setReadingStatus(`Scan failed: ${error.message}`);
-      console.error('NFC scanning error:', error);
-    }
-  };
+  
 
   const handleNFCScan = async () => {
     if (!nfcSupported) {
@@ -196,17 +151,7 @@ const NFCChairSelection = () => {
           </div>
         )}
 
-        {/* NFC Scan Button */}
-        {nfcSupported && (
-          <div className="mb-6 text-center">
-            <button 
-              onClick={handleNFCScan}
-              className="py-3 px-8 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition duration-150 ease-in-out"
-            >
-              Scan NFC Tag
-            </button>
-          </div>
-        )}
+       
         
         {/* Error Message */}
         {error && (
@@ -282,12 +227,7 @@ const NFCChairSelection = () => {
           </div>
         )}
         
-        {/* NFC Instructions */}
-        {nfcSupported && (
-          <div className="mt-6 text-center text-gray-600 text-sm">
-            <p>💡 Tip: You can also tap an NFC tag to quickly select a chair</p>
-          </div>
-        )}
+        
         
         {/* Navigation Option */}
         <div className="mt-8 text-center">
