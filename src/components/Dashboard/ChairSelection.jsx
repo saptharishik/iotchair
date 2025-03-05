@@ -11,8 +11,7 @@ const NFCChairSelection = () => {
   const [error, setError] = useState('');
   const [nfcSupported, setNfcSupported] = useState(false);
   const [readingStatus, setReadingStatus] = useState('');
-  const [nfcSupported, setNfcSupported] = useState(false);
-  const [readingStatus, setReadingStatus] = useState('');
+
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
