@@ -117,16 +117,7 @@ const NFCChairSelection = () => {
           <p className="mt-2 text-gray-600">Tap NFC or Select a Chair</p>
         </div>
         
-        {/* NFC Scan Status */}
-        {readingStatus && (
-          <div className={`mb-6 p-3 rounded-lg text-center ${
-            readingStatus.includes('Error') || readingStatus.includes('not supported') 
-              ? 'bg-red-100 text-red-700' 
-              : 'bg-green-100 text-green-700'
-          }`}>
-            {readingStatus}
-          </div>
-        )}
+        
 
         {/* NFC Scan Button */}
         {nfcSupported && (
