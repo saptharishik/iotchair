@@ -139,13 +139,13 @@ const ChairActivityLog = () => {
   const getEventDescription = (event) => {
     switch(event.type) {
       case 'sittingStart':
-        return `Started sitting session in ${event.position || 'unknown'} position`;
+        return `Started sitting session`;
       case 'sittingSession':
-        return `Completed sitting session (${parseFloat(event.duration).toFixed(1)} minutes)`;
+        return `Completed sitting session`;
       case 'positionChange':
-        return `Changed position from ${event.from} to ${event.to}`;
+        return `Changed position`;
       case 'hydrationReminder':
-        return `Hydration reminder after ${parseFloat(event.sittingDuration).toFixed(1)} minutes of sitting`;
+        return `Hydration reminder`;
       case 'hydrationDismissed':
         return 'Dismissed hydration reminder';
       default:
