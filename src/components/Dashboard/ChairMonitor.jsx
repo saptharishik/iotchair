@@ -858,7 +858,7 @@ const ChairMonitor = () => {
                     <span className="text-sm font-normal text-gray-600 ml-1 mb-1">mins</span>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((chairData.avgDailyHours || 3.5) * 10, 100)}%` }}></div>
+                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((totalMinutes) * 10, 100)}%` }}></div>
                   </div>
                 </div>
                 
