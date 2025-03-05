@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ref, onValue, query, orderByKey } from 'firebase/database';
+import { ref, onValue, query, orderByKey,get } from 'firebase/database';
 import { database } from '../../config/firebase';
 
 const ChairActivityLog = () => {
@@ -13,6 +13,8 @@ const ChairActivityLog = () => {
   const [dateEvents, setDateEvents] = useState([]);
   const [searchDate, setSearchDate] = useState('');
   const [chairInfo, setChairInfo] = useState(null);
+  const [sittingTime,setSittingtTime] = useState(0);
+
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -28,6 +30,10 @@ const ChairActivityLog = () => {
   // Load chair info and reports
   useEffect(() => {
     // Get chair info
+
+    
+
+
     const chairRef = ref(database, `chairs/${chairId}`);
     onValue(chairRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -150,18 +156,12 @@ const ChairActivityLog = () => {
   // Calculate daily statistics
   const calculateDailyStats = (events) => {
     const stats = {
-      totalSittingTime: 0,
-      sittingSessions: 0,
       positionChanges: 0,
       hydrationReminders: 0
     };
 
     events.forEach(event => {
       switch(event.type) {
-        case 'sittingSession':
-          stats.totalSittingTime += parseFloat(event.duration || 0);
-          stats.sittingSessions++;
-          break;
         case 'positionChange':
           stats.positionChanges++;
           break;
@@ -187,6 +187,20 @@ const ChairActivityLog = () => {
   };
 
   const stats = selectedDate && dateEvents.length > 0 ? calculateDailyStats(dateEvents) : null;
+  const TimeRef = ref(database, `chairs/${chairId}/reports/${selectedDate}/prev_timer`);
+
+    get(TimeRef)
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                setSittingtTime(snapshot.val()); // Update state with retrieved value
+                console.log("Previous Timer:", snapshot.val());
+            } else {
+                console.log("No previous timer found!");
+            }
+        })
+        .catch((error) => {
+            console.error("Error retrieving previous timer:", error);
+        });
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-100">
@@ -226,10 +240,10 @@ const ChairActivityLog = () => {
                 <p className="text-sm text-gray-500 ">Name</p>
                 <p className="font-medium text-black" >{chairInfo.name || `Chair #${chairId}`}</p>
               </div>
-              <div>
+              {/* <div>
                 <p className="text-sm text-gray-500">Location</p>
                 <p className="font-medium text-black">{chairInfo.location || 'Not specified'}</p>
-              </div>
+              </div> */}
               <div>
                 <p className="text-sm text-gray-500">Total Usage</p>
                 <p className="font-medium text-black">{formatDuration(chairInfo.minutes || 0)}</p>
@@ -298,15 +312,15 @@ const ChairActivityLog = () => {
                 </h2>
                 
                 {stats && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 shadow-sm">
                       <p className="text-sm text-blue-600">Total Sitting Time</p>
-                      <p className="text-xl font-bold text-blue-800">{formatDuration(stats.totalSittingTime)}</p>
+                      <p className="text-xl font-bold text-blue-800">{sittingTime.toFixed(2)}</p>
                     </div>
-                    <div className="bg-green-50 p-3 rounded-lg border border-green-100 shadow-sm">
+                    {/* <div className="bg-green-50 p-3 rounded-lg border border-green-100 shadow-sm">
                       <p className="text-sm text-green-600">Sitting Sessions</p>
                       <p className="text-xl font-bold text-green-800">{stats.sittingSessions}</p>
-                    </div>
+                    </div> */}
                     <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 shadow-sm">
                       <p className="text-sm text-purple-600">Position Changes</p>
                       <p className="text-xl font-bold text-purple-800">{stats.positionChanges}</p>
@@ -320,7 +334,7 @@ const ChairActivityLog = () => {
                 
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-lg text-gray-800">Event Timeline</h3>
-                  <div className="text-sm text-gray-500">Showing newest events first</div>
+                  {/* <div className="text-sm text-gray-500">Showing newest events first</div> */}
                 </div>
                 
                 {dateEvents.length === 0 ? (

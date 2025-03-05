@@ -34,6 +34,7 @@ const ChairMonitor = () => {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
+    
   
     const chairStateRef = ref(database, `chairs/${chairId}/chairState`);
     
@@ -55,7 +56,13 @@ const ChairMonitor = () => {
           prevMinutesRef.current += currentMinutesRef.current;
           setTotalMinutes(prevMinutesRef.current);
           
-          const chairRef = ref(database, `chairs/${chairId}`);
+
+          const today = new Date().toISOString().split('T')[0]; 
+
+          
+
+          
+          const chairRef = ref(database, `chairs/${chairId}/reports/${today}/`);
           update(chairRef, {
             prev_timer: prevMinutesRef.current,
             current_timer: 0
@@ -122,7 +129,7 @@ const ChairMonitor = () => {
         type: 'hydrationReminder',
         sittingDuration: currentMinutesRef.current.toFixed(2)
       });
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 1 * 60 * 1000); // 5 minutes
   };
 
  
@@ -152,8 +159,8 @@ const ChairMonitor = () => {
 
   // Update position changes in Firebase
   const updatePositionChanges = (changes) => {
-    const chairRef = ref(database, `chairs/${chairId}`);
-    
+    const today = new Date().toISOString().split('T')[0]; 
+    const chairRef = ref(database, `chairs/${chairId}/reports/${today}/`);        
     // Update Firebase with position changes
     update(chairRef, {
       positionChanges: changes
@@ -570,7 +577,9 @@ const ChairMonitor = () => {
   };
   // Render the component
   if (loading) {
-    return <div className="loading">Loading chair data...</div>;
+    return <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
+    <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+  </div>;
   }
 
   if (error) {
