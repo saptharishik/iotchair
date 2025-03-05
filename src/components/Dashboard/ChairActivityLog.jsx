@@ -364,9 +364,9 @@ const ChairActivityLog = () => {
                           
                           {event.type === 'positionChange' && (
                             <div className="mt-2 text-sm flex items-center gap-2 text-gray-600 bg-white p-2 rounded-lg border border-gray-100">
-                              <span className="font-medium">{event.from}</span>
+                              <span className="font-medium">{event.oldPosition}</span>
                               <span>➡️</span>
-                              <span className="font-medium">{event.to}</span>
+                              <span className="font-medium">{event.newPosition}</span>
                             </div>
                           )}
                         </div>
