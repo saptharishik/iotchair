@@ -21,17 +21,23 @@ const PressureDistribution = ({ sensorData }) => {
       };
     }
 
+    // Convert sensor values to numbers and calculate percentages
+    const leftThigh = Number(data.sensor_data.left_thigh || 0);
+    const rightThigh = Number(data.sensor_data.right_thigh || 0);
+    const leftPelvis = Number(data.sensor_data.left_pelvis || 0);
+    const rightPelvis = Number(data.sensor_data.right_pelvis || 0);
+
     // Extract data from the provided structure
     return {
-      state: data.chairState,
+      state: data.chairState || 'occupied',
       sensors: {
         thighs: [
-          { position: 'Left Thigh', active: true, pressure: (data.sensor_data.left_thigh/4095)*100 || 0 },
-          { position: 'Right Thigh', active: true, pressure: (data.sensor_data.right_thigh/4095)*100 || 0 }
+          { position: 'Left Thigh', active: true, pressure: Math.round((leftThigh/4095)*100) },
+          { position: 'Right Thigh', active: true, pressure: Math.round((rightThigh/4095)*100) }
         ],
         pelvis: [
-          { position: 'Left Pelvis', active: true, pressure: (data.sensor_data.left_pelvis/4095)*100 || 0 },
-          { position: 'Right Pelvis', active: true, pressure: (data.sensor_data.right_pelvis/4095)*100 || 0 }
+          { position: 'Left Pelvis', active: true, pressure: Math.round((leftPelvis/4095)*100) },
+          { position: 'Right Pelvis', active: true, pressure: Math.round((rightPelvis/4095)*100) }
         ]
       }
     };
@@ -65,6 +71,9 @@ const PressureDistribution = ({ sensorData }) => {
     if (pressure < 85) return "High";
     return "Very High";
   };
+
+  // For debugging
+  console.log("Processed sensor data:", data);
 
   return (
     <div className="rounded-lg border border-gray-200 shadow-lg bg-white overflow-hidden">
@@ -122,10 +131,10 @@ const PressureDistribution = ({ sensorData }) => {
             </div>
             
             {/* Labels */}
-            <div className="absolute right-15 top-25 transform -translate-y-1/2 flex flex-col items-start">
+            <div className="absolute right-4 top-6 flex flex-col items-start">
               <span className="text-sm font-medium text-gray-700 mb-1">Thigh</span>
             </div>
-            <div className="absolute right-15 bottom-33 transform translate-y-1/2 flex flex-col items-start">
+            <div className="absolute right-4 bottom-6 flex flex-col items-start">
               <span className="text-sm font-medium text-gray-700">Pelvis</span>
             </div>
           </div>
