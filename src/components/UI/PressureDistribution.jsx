@@ -26,12 +26,12 @@ const PressureDistribution = ({ sensorData }) => {
       state: data.chairState,
       sensors: {
         thighs: [
-          { position: 'Left Thigh', active: true, pressure: data.sensor_data.left_thigh || 0 },
-          { position: 'Right Thigh', active: true, pressure: data.sensor_data.right_thigh || 0 }
+          { position: 'Left Thigh', active: true, pressure: (data.sensor_data.left_thigh/4095)*100 || 0 },
+          { position: 'Right Thigh', active: true, pressure: (data.sensor_data.right_thigh/4095)*100 || 0 }
         ],
         pelvis: [
-          { position: 'Left Pelvis', active: true, pressure: data.sensor_data.left_pelvis || 0 },
-          { position: 'Right Pelvis', active: true, pressure: data.sensor_data.right_pelvis || 0 }
+          { position: 'Left Pelvis', active: true, pressure: (data.sensor_data.left_pelvis/4095)*100 || 0 },
+          { position: 'Right Pelvis', active: true, pressure: (data.sensor_data.right_pelvis/4095)*100 || 0 }
         ]
       }
     };
