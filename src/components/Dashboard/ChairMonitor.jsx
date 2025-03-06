@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ref, onValue, update, push, set, get } from 'firebase/database';
 import { database } from '../../config/firebase';
 
+import PressureDistribution from '../UI/PressureDistribution';
 const ChairMonitor = () => {
   const { chairId } = useParams();
   const navigate = useNavigate();
@@ -40,49 +41,44 @@ const ChairMonitor = () => {
     
     const unsubscribeState = onValue(chairStateRef, (stateSnapshot) => {
       const chairState = stateSnapshot.val();
-  
+    
       console.log('Chair State:', chairState);
-  
-      // Comprehensive interval stopping
+    
+      // First, always clear the existing interval
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
+        console.log('Timer interval cleared');
       }
-  
-      // Reset timer logic
+    
+      // Then handle the transition logic
       if (chairState !== 'sitting') {
         // Accumulate previous time
         if (currentMinutesRef.current > 0) {
           prevMinutesRef.current += currentMinutesRef.current;
           setTotalMinutes(prevMinutesRef.current);
           
-
           const today = new Date().toISOString().split('T')[0]; 
-
-          
-
-          
           const chairRef = ref(database, `chairs/${chairId}/reports/${today}/`);
           update(chairRef, {
             prev_timer: prevMinutesRef.current,
             current_timer: 0
           });
         }
-  
+    
         // Explicitly reset current timer
         currentMinutesRef.current = 0;
         setCurrentSessionMinutes(0);
-  
-        // Additional safeguard: ensure no interval is running
-        console.log('Stopping timer due to non-sitting state');
+        console.log('Stopped timer and accumulated time');
       }
-  
-      // Only start timer for sitting state
+    
+      // Only start a new timer if the state is 'sitting'
       if (chairState === 'sitting') {
+        console.log('Starting new timer interval');
         timerIntervalRef.current = setInterval(() => {
           currentMinutesRef.current += (1/60);
           setCurrentSessionMinutes(currentMinutesRef.current);
-  
+    
           const chairRef = ref(database, `chairs/${chairId}`);
           update(chairRef, {
             current_timer: currentMinutesRef.current
@@ -331,9 +327,17 @@ const ChairMonitor = () => {
 
   // Determine chair state based on sensor data
   const determineChairState = (data) => {
-    if (!data) return { state: 'unknown', position: 'Unknown' };
+    if (!data || !data.sensor_data) return { state: 'unknown', position: 'Unknown' };
     
-    const { leftarm, rightarm, leftleg, rightleg, weight } = data;
+    // Get sensor data from the new path
+    const sensorData = data.sensor_data;
+    const leftarm = sensorData.left_armrest;
+    const rightarm = sensorData.right_armrest;
+    const leftleg = sensorData.left_legrest;
+    const rightleg = sensorData.right_legrest;
+    const weight = data.weight;
+  
+    
     const allSensorsActive = leftarm > 0 && rightarm > 0 && leftleg > 0 && rightleg > 0;
     const anySensorActive = leftarm > 0 || rightarm > 0 || leftleg > 0 || rightleg > 0;
     
@@ -350,19 +354,9 @@ const ChairMonitor = () => {
     // Person sitting - weight and sensors active
     if (weight > 0 && anySensorActive) {
       // Determine position
-      let position = 'Irregular';
+      let position = data.sensor_data.current;
       
-      if (allSensorsActive) {
-        position = 'Balanced';
-      } else if (leftarm > 0 && leftleg > 0 && (rightarm <= 0 || rightleg <= 0)) {
-        position = 'Leaning Left';
-      } else if (rightarm > 0 && rightleg > 0 && (leftarm <= 0 || leftleg <= 0)) {
-        position = 'Leaning Right';
-      } else if ((leftarm <= 0 && rightarm <= 0) && (leftleg > 0 && rightleg > 0)) {
-        position = 'Forward Slouch';
-      } else if ((leftarm > 0 && rightarm > 0) && (leftleg <= 0 && rightleg <= 0)) {
-        position = 'Slouching Back';
-      }
+      
       
       return { state: 'sitting', position };
     }
@@ -575,6 +569,9 @@ const ChairMonitor = () => {
   const navigateToActivityLog = () => {
     navigate(`/chair-activity/${chairId}`);
   };
+
+
+ 
   // Render the component
   if (loading) {
     return <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
@@ -772,16 +769,16 @@ const ChairMonitor = () => {
                           <path d={`M50 45 L50 ${chairData.sittingPosition === 'Forward Slouch' ? '75' : '65'}`} stroke="#3B82F6" strokeWidth="4" />
                           
                           {/* Left arm */}
-                          <path d={`M50 50 L${chairData.leftarm ? '30' : '40'} ${chairData.leftarm ? '45' : '55'}`} stroke={chairData.leftarm ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
+                          <path d={`M50 50 L${chairData.sensor_data.left_armrest ? '30' : '40'} ${chairData.sensor_data.left_armrest ? '45' : '55'}`} stroke={chairData.sensor_data.left_armrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
                           
                           {/* Right arm */}
-                          <path d={`M50 50 L${chairData.rightarm ? '70' : '60'} ${chairData.rightarm ? '45' : '55'}`} stroke={chairData.rightarm ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
+                          <path d={`M50 50 L${chairData.sensor_data.right_armrest ? '70' : '60'} ${chairData.sensor_data.right_armrest ? '45' : '55'}`} stroke={chairData.sensor_data.right_armrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
                           
                           {/* Left leg */}
-                          <path d={`M50 65 L${chairData.leftleg ? '40' : '45'} 85`} stroke={chairData.leftleg ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
+                          <path d={`M50 65 L${chairData.sensor_data.left_legrest ? '40' : '45'} 85`} stroke={chairData.sensor_data.left_legrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
                           
                           {/* Right leg */}
-                          <path d={`M50 65 L${chairData.rightleg ? '60' : '55'} 85`} stroke={chairData.rightleg ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
+                          <path d={`M50 65 L${chairData.sensor_data.right_legrest ? '60' : '55'} 85`} stroke={chairData.sensor_data.right_legrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
                         </svg>
                       </div>
                       
@@ -791,17 +788,17 @@ const ChairMonitor = () => {
                         </p>
                         
                         <div className="flex flex-wrap gap-2 justify-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.leftarm ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Left Arm {chairData.leftarm ? 'Active' : 'Inactive'}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.left_armrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                            Left Arm {chairData.sensor_data.left_armrest ? 'Active' : 'Inactive'}
                           </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.rightarm ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Right Arm {chairData.rightarm ? 'Active' : 'Inactive'}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.right_armrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                            Right Arm {chairData.sensor_data.right_armrest ? 'Active' : 'Inactive'}
                           </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.leftleg ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Left Leg {chairData.leftleg ? 'Active' : 'Inactive'}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.left_legrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                            Left Leg {chairData.sensor_data.left_legrest ? 'Active' : 'Inactive'}
                           </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.rightleg ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Right Leg {chairData.rightleg ? 'Active' : 'Inactive'}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.right_legrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                            Right Leg {chairData.sensor_data.right_legrest ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                       </div>
@@ -825,6 +822,12 @@ const ChairMonitor = () => {
                   )}
                 </div>
               </div>
+              {chairData  && (
+              <PressureDistribution 
+                sensorData={chairData} 
+              />
+            )}
+
             </div>
             
             {/* Usage Statistics Card */}
