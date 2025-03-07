@@ -499,7 +499,7 @@ const ChairMonitor = () => {
           isEmpty: state === 'absent',
           
           // Time tracking
-          prevTimer: prevMinutesRef.current, // Previous accumulated minutes
+          prevTimer: prevMinutesRef.current, // Previousions accumulated minutes
           currentTimer: currentMinutesRef.current, // Current session minutes
           totalMinutes: prevMinutesRef.current + currentMinutesRef.current, // Total (prev + current)
           
@@ -840,12 +840,12 @@ const ChairMonitor = () => {
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                <p className="text-sm text-gray-600">Current session</p>
+                <p className="text-sm text-gray-600">Current session seconds</p>
                   <div className="mt-2 flex items-end">
                     <p className="text-2xl font-semibold text-blue-600">
-                      {currentSessionMinutes.toFixed(2)}
+                      {(currentSessionMinutes*100).toFixed(0)}
                     </p>
-                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">mins</span>
+                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">secs</span>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
                     <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((chairData.hours || 0) * 10, 100)}%` }}></div>
@@ -856,7 +856,7 @@ const ChairMonitor = () => {
                 <p className="text-sm text-gray-600">Today's sitting time</p>
                   <div className="mt-2 flex items-end">
                     <p className="text-2xl font-semibold text-blue-600">
-                      {totalMinutes.toFixed(2)}
+                      {((totalMinutes*100)/60).toFixed(0)}
                     </p>
                     <span className="text-sm font-normal text-gray-600 ml-1 mb-1">mins</span>
                   </div>
