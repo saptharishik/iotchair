@@ -246,7 +246,7 @@ const ChairActivityLog = () => {
               </div> */}
               <div>
                 <p className="text-sm text-gray-500">Total Usage</p>
-                <p className="font-medium text-black">{formatDuration(chairInfo.minutes || 0)}</p>
+                <p className="font-medium text-black">{((sittingTime*100)/60).toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -315,7 +315,7 @@ const ChairActivityLog = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 shadow-sm">
                       <p className="text-sm text-blue-600">Total Sitting Time</p>
-                      <p className="text-xl font-bold text-blue-800">{sittingTime.toFixed(2)}</p>
+                      <p className="text-xl font-bold text-blue-800">{((sittingTime*100)/60).toFixed(2)}</p>
                     </div>
                     {/* <div className="bg-green-50 p-3 rounded-lg border border-green-100 shadow-sm">
                       <p className="text-sm text-green-600">Sitting Sessions</p>
