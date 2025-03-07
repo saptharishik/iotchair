@@ -97,23 +97,17 @@ const ChairMonitor = () => {
       }
     };
   }, [chairId]);
-  // Update current minutes in Firebase
-  const updateCurrentMinutesInFirebase = (minutes) => {
-    const chairRef = ref(database, `chairs/${chairId}`);
-    update(chairRef, {
-      current_timer: minutes
-    }).catch(err => {
-      console.error("Error updating current minutes:", err);
-    });
-  };
+  
 
   // Set hydration reminder
   const setHydrationReminder = () => {
+    console.log("Setting hydration reminder");
     if (sittingTimerRef.current) {
       clearTimeout(sittingTimerRef.current);
     }
     
     sittingTimerRef.current = setTimeout(() => {
+      console.log("Hydration timeout triggered!");
       setShowHydrationAlert(true);
       
       // Update hydration status in Firebase
@@ -125,7 +119,7 @@ const ChairMonitor = () => {
         type: 'hydrationReminder',
         sittingDuration: currentMinutesRef.current.toFixed(2)
       });
-    }, 1 * 60 * 1000); // 5 minutes
+    }, 0.1 * 60 * 1000); // Correct to 5 minutes
   };
 
  
@@ -297,6 +291,7 @@ const ChairMonitor = () => {
           position: position,
           timestamp: new Date().toISOString()
         });
+        setHydrationReminder();
       } 
       else if (newState === 'objectPlaced') {
         addToReports({
