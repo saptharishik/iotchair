@@ -335,7 +335,7 @@ const ChairMonitor = () => {
     const rightarm = sensorData.right_armrest;
     const leftleg = sensorData.left_legrest;
     const rightleg = sensorData.right_legrest;
-    const weight = data.weight;
+    const weight = sensorData.weight;
   
     
     const allSensorsActive = leftarm > 0 && rightarm > 0 && leftleg > 0 && rightleg > 0;
@@ -618,14 +618,13 @@ const ChairMonitor = () => {
           </div>
         </div>
         
-        {/* Login Time Info */}
-        {chairData?.loginTime && (
-          <div className="mb-4 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Session started:</span> {new Date(chairData.loginTime).toLocaleString()}
-            </p>
-          </div>
-        )}
+        
+        <div className="mb-4 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+  <p className="text-sm text-gray-600 text-right">
+    <span className="font-medium">Last updated on </span>
+    <span className="font-medium text-blue-600">{chairData.sensor_data.timestamp}</span> 
+  </p>
+</div>
         
         {/* Hydration Alert */}
         {showHydrationAlert && chairData?.isPersonSitting && (
@@ -731,7 +730,7 @@ const ChairMonitor = () => {
                           <line x1="7" y1="7" x2="7.01" y2="7" />
                         </svg>
                         <p className="text-xl font-bold text-blue-800 z-10">
-                          {chairData.weight || '0'}
+                          {chairData.sensor_data.weight || '0'}
                         </p>
                       </div>
                       <p className="text-base text-gray-600">kg</p>
