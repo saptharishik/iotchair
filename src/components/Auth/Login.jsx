@@ -96,19 +96,8 @@ const Login = () => {
           </div>
           
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                type="checkbox"
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 text-black"
-              />
-              <label htmlFor="remember-me" className="block ml-2 text-sm text-gray-700">
-                Remember me
-              </label>
-            </div>
-            <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-              Forgot password?
-            </a>
+            
+            
           </div>
           
           <button
@@ -126,33 +115,10 @@ const Login = () => {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 text-gray-500 bg-white">
-                Or continue with
-              </span>
-            </div>
+            
           </div>
           
-          <div className="grid grid-cols-2 gap-3 mt-6">
-            <button
-              type="button"
-              className="w-full py-2 px-4 flex justify-center items-center bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
-              </svg>
-              Google
-            </button>
-            <button
-              type="button"
-              className="w-full py-2 px-4 flex justify-center items-center bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13.397 20.997v-8.196h2.765l.411-3.209h-3.176V7.548c0-.926.258-1.56 1.587-1.56h1.684V3.127A22.336 22.336 0 0 0 14.201 3c-2.444 0-4.122 1.492-4.122 4.231v2.355H7.332v3.209h2.753v8.202h3.312z" />
-              </svg>
-              Facebook
-            </button>
-          </div>
+          
         </div>
         
         {/* Sign up link */}

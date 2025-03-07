@@ -185,9 +185,7 @@ const NFCChairSelection = () => {
                       </div>
                       <h3 className="text-lg font-semibold text-gray-800">Chair #{chair.id}</h3>
                     </div>
-                    <p className="text-gray-600 mb-2">
-                      {chair.location || "No location specified"}
-                    </p>
+                    
                     <div className="flex justify-between items-center mt-4">
                       <span className="text-sm text-blue-600 font-medium">View details</span>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -199,15 +197,7 @@ const NFCChairSelection = () => {
               </div>
             )}
             
-            {/* Add New Chair Button */}
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={() => navigate('/add-chair')}
-                className="py-3 px-8 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Add New Chair
-              </button>
-            </div>
+            
           </>
         )}
         
@@ -223,12 +213,12 @@ const NFCChairSelection = () => {
         {/* Navigation Option */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-600">
-            Want to go back?{' '}
+            {' '}
             <button 
               onClick={() => navigate(-1)}
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-white hover:text-blue-600"
             >
-              Return to previous page
+              <span>&lt;-</span> Back 
             </button>
           </p>
         </div>
