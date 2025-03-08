@@ -43,7 +43,7 @@ const SignUp = () => {
             </div>
           </div>
           
-          <h1 className="text-3xl font-bold text-gray-800">Smart Chair</h1>
+          <h1 className="text-3xl font-bold text-gray-800">THRONE</h1>
           <p className="mt-2 text-gray-600">Create your Sedentary Monitor account</p>
         </div>
         

@@ -330,7 +330,7 @@ const ChairMonitor = () => {
     const rightarm = sensorData.right_armrest;
     const leftleg = sensorData.left_legrest;
     const rightleg = sensorData.right_legrest;
-    const weight = sensorData.weight;
+    const weight = sensorData.weight_kg;
   
     
     const allSensorsActive = leftarm > 0 && rightarm > 0 && leftleg > 0 && rightleg > 0;
@@ -725,7 +725,7 @@ const ChairMonitor = () => {
                           <line x1="7" y1="7" x2="7.01" y2="7" />
                         </svg>
                         <p className="text-xl font-bold text-blue-800 z-10">
-                          {chairData.sensor_data.weight || '0'}
+                          {chairData.sensor_data.weight_kg || '0'}
                         </p>
                       </div>
                       <p className="text-base text-gray-600">kg</p>
