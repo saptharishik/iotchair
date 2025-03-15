@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
     "axios": "^1.8.1",
     "firebase": "^11.3.1",
     "lucide-react": "^0.477.0",
