@@ -1536,20 +1536,27 @@ const ChairMonitor = () => {
     });
     
     // Set 10-second cooldown timer
-    setTimeout(() => {
-      setTaskCooldownActive(false);
-      console.log('Cooldown period ended, can suggest tasks again');
-      
-      // Record in reports
-      addToReports({
-        type: 'taskCooldownEnded',
-        timestamp: new Date().toISOString()
-      });
-      
-      // Reset the position timer so tasks will be suggested again quickly
-      setLastPositionChangeTime(Date.now() - 9000); // Set as if in position for 9 seconds already
-      
-    }, 0.2 * 60 * 1000); // 10 seconds cooldown
+    // At the end of the startCooldownPeriod function, add:
+setTimeout(() => {
+  setTaskCooldownActive(false);
+  console.log('Cooldown period ended, can suggest tasks again');
+  
+  // Record in reports
+  addToReports({
+    type: 'taskCooldownEnded',
+    timestamp: new Date().toISOString()
+  });
+  
+  // Reset task states completely
+  setAiTasks([]);
+  setCurrentTaskIndex(0);
+  setTaskInProgress(false);
+  setShowTaskModal(false);
+  
+  // Reset the position timer so tasks will be suggested again quickly
+  setLastPositionChangeTime(Date.now() - 9000); // Set as if in position for 9 seconds already
+  
+}, 0.2 * 60 * 1000); // Make this 20 seconds if that's the intended time
   };
 
   // Dismiss AI mode
