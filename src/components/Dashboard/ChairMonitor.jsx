@@ -1593,41 +1593,41 @@ setTimeout(() => {
   };
 
   // Manual Task Button component
-  const ManualTaskButton = () => {
-    if (!chairData?.isPersonSitting) return null;
-    
-    return (
-      <button
-        onClick={() => {
-          if (taskCooldownActive) {
-            // Show message that we're in cooldown
-            alert("Please wait before generating new tasks. Your body needs rest between activity sessions.");
-            return;
+const ManualTaskButton = () => {
+  if (!chairData?.isPersonSitting) return null;
+  
+  return (
+    <button
+      onClick={() => {
+        if (taskCooldownActive) {
+          // Show message that we're in cooldown
+          alert("Please wait before generating new tasks. Your body needs rest between activity sessions.");
+          return;
+        }
+        
+        // Generate tasks asynchronously
+        generateAiTasks().then(tasks => {
+          if (tasks && tasks.length > 0) {
+            setAiTasks(tasks);
+            setCurrentTaskIndex(0);
+            setShowTaskModal(true);
+            
+            // Reset position timer when manually generating tasks
+            setLastPositionChangeTime(Date.now());
           }
-          
-          // Generate tasks asynchronously
-          generateAiTasks().then(tasks => {
-            if (tasks && tasks.length > 0) {
-              setAiTasks(tasks);
-              setCurrentTaskIndex(0);
-              setShowTaskModal(true);
-              
-              // Reset position timer when manually generating tasks
-              setLastPositionChangeTime(Date.now());
-            }
-          }).catch(err => {
-            console.error("Error generating AI tasks:", err);
-          });
-        }}
-        className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center justify-center"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        Generate Health Tasks Now
-      </button>
-    );
-  };
+        }).catch(err => {
+          console.error("Error generating AI tasks:", err);
+        });
+      }}
+      className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center justify-center"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+      {aiModeEnabled ? "Generate AI Health Tasks Now" : "Get Health Recommendations"}
+    </button>
+  );
+};
 
   // Task Modal Component
   const TaskModal = () => {
@@ -1798,6 +1798,56 @@ setTimeout(() => {
             <span className="font-medium text-blue-600">{chairData.sensor_data.timestamp}</span> 
           </p>
         </div>
+        {/* Mode Toggle Switch */}
+        <div className="mb-6 p-4 bg-white rounded-lg shadow border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-800">Operation Mode</h3>
+              <p className="text-sm text-gray-600">
+                {aiModeEnabled ? 
+                  "AI Mode: Automatic health reminders enabled" : 
+                  "Normal Mode: Only manual health reminders"}
+              </p>
+            </div>
+            <div className="flex items-center">
+              <span className={`mr-2 text-sm ${!aiModeEnabled ? "font-medium text-gray-800" : "text-gray-500"}`}>
+                Normal
+              </span>
+              <div className="relative inline-block w-12 mr-2 align-middle select-none">
+                <input 
+                  type="checkbox" 
+                  name="toggle" 
+                  id="toggle" 
+                  checked={aiModeEnabled}
+                  onChange={() => {
+                    const newMode = !aiModeEnabled;
+                    setAiModeEnabled(newMode);
+                    
+                    // Record mode change in reports
+                    addToReports({
+                      type: newMode ? 'aiModeEnabled' : 'aiModeDisabled',
+                      timestamp: new Date().toISOString()
+                    });
+                  }}
+                  className="opacity-0 w-0 h-0 absolute"
+                />
+                <label 
+                  htmlFor="toggle" 
+                  className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-300 ease-in-out ${aiModeEnabled ? 'bg-blue-600' : 'bg-gray-300'}`}
+                >
+                  <span 
+                    className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform duration-300 ease-in-out ${aiModeEnabled ? 'translate-x-6' : 'translate-x-0'}`}
+                  ></span>
+                </label>
+              </div>
+              <span className={`text-sm ${aiModeEnabled ? "font-medium text-blue-600" : "text-gray-500"}`}>
+                AI
+              </span>
+            </div>
+          </div>
+        </div>
+
+
         
         {/* Hydration Alert */}
         {showHydrationAlert && chairData?.isPersonSitting && (
