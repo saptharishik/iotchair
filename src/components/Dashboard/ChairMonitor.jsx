@@ -45,10 +45,7 @@ const ChairMonitor = () => {
   const timerIntervalRef = useRef(null);
   const taskTimerRef = useRef(null);
   
-  // TensorFlow.js LSTM variables
-  let lstmModel = null;
-  let modelLoaded = false;
-  let modelTraining = false;
+  
   
   useEffect(() => {
     // Immediately clear any existing interval
