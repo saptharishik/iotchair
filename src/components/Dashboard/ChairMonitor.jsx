@@ -1295,7 +1295,7 @@ const ChairMonitor = () => {
         id: 2,
         title: 'Quick Stretch',
         description: 'Stretch your arms overhead and twist gently',
-        duration: , // 1 minute
+        duration: 0.1, // 1 minute
         completed: false,
         priority: 'medium'
       });
