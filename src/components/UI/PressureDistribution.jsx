@@ -101,7 +101,7 @@ const PressureDistribution = ({ sensorData, darkMode }) => {
       {data.state !== 'absent' ? (
         <div>
           {/* Box-shaped visualization with pressure points */}
-          <div className={`w-full h-56 sm:h-72 border rounded-lg mb-4 sm:mb-6 relative shadow-inner ${
+          <div className={`w-full h-64 sm:h-72 border rounded-lg mb-4 sm:mb-6 relative shadow-inner ${
             darkMode 
               ? 'bg-gray-800 border-gray-700' 
               : 'bg-gray-50 border-gray-200'
@@ -120,34 +120,34 @@ const PressureDistribution = ({ sensorData, darkMode }) => {
                 {data.sensors.thighs?.map((sensor, index) => (
                   <div 
                     key={`thigh-${index}`}
-                    className="absolute w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300"
+                    className="absolute w-6 h-6 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300"
                     style={{
                       backgroundColor: getPressureColor(sensor.pressure),
-                      top: '20%',
+                      top: '15%',
                       left: index === 0 ? '30%' : index === 1 ? '70%' : '50%',
                       transform: 'translate(-50%, -50%)',
                       boxShadow: darkMode 
-                        ? '0 0 12px rgba(0,0,0,0.4)' 
-                        : '0 0 8px rgba(0,0,0,0.2)'
+                        ? '0 0 8px rgba(0,0,0,0.4)' 
+                        : '0 0 6px rgba(0,0,0,0.2)'
                     }}
                   >
                     <span className="text-xs sm:text-sm font-bold text-white">{sensor.pressure}%</span>
                   </div>
                 ))}
                 
-                {/* Pelvis pressure points (bottom) - positioned closer together */}
+                {/* Pelvis pressure points (bottom) - positioned further apart vertically */}
                 {data.sensors.pelvis?.map((sensor, index) => (
                   <div 
                     key={`pelvis-${index}`}
-                    className="absolute w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300"
+                    className="absolute w-6 h-6 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300"
                     style={{
                       backgroundColor: getPressureColor(sensor.pressure),
-                      bottom: '20%',
+                      bottom: '15%',
                       left: index === 0 ? '40%' : index === 1 ? '60%' : '50%',
                       transform: 'translate(-50%, -50%)',
                       boxShadow: darkMode 
-                        ? '0 0 12px rgba(0,0,0,0.4)' 
-                        : '0 0 8px rgba(0,0,0,0.2)'
+                        ? '0 0 8px rgba(0,0,0,0.4)' 
+                        : '0 0 6px rgba(0,0,0,0.2)'
                     }}
                   >
                     <span className="text-xs sm:text-sm font-bold text-white">{sensor.pressure}%</span>
