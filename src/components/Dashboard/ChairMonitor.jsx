@@ -2012,460 +2012,461 @@ setTimeout(() => {
         )}
         
         {/* Chair Data Display - Enhanced Card Design */}
-        <div className="space-y-8">
-          {/* Status Cards - Improved Grid Layout */}
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {/* Occupancy and Weight Card - Enhanced Visuals */}
-            <div className={`p-6 rounded-lg shadow-md border ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600' 
-                : 'bg-white border-gray-200'
-            }`}>
-              <h2 className={`mb-5 text-lg font-semibold flex items-center ${
-                darkMode ? 'text-gray-100' : 'text-gray-800'
-              }`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
-                  darkMode ? 'text-blue-400' : 'text-blue-600'
-                }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Chair Status
-              </h2>
-              <div className="grid grid-cols-2 gap-5">
-                <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
-                  darkMode 
-                    ? 'bg-gray-800 border-gray-700' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Occupancy
-                  </p>
-                  <div className="mt-4 flex flex-col items-center">
-                    {chairData.isOccupied ? (
-                      chairData.isPersonSitting ? (
-                        /* Person sitting icon */
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 ${
-                          darkMode ? 'text-blue-400' : 'text-blue-600'
-                        }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="7" r="4" />
-                          <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
-                          <rect x="8" y="15" width="8" height="6" rx="1" />
-                        </svg>
-                      ) : (
-                        /* Box/object icon */
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 ${
-                          darkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 8v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8l9-4 9 4z" />
-                          <path d="M12 4v16M3 8h18" />
-                        </svg>
-                      )
-                    ) : (
-                      /* Empty chair icon */
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 ${
-                        darkMode ? 'text-gray-500' : 'text-gray-400'
-                      }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="6" y="11" width="12" height="10" rx="2" />
-                        <path d="M5 19h14M10 5v6M14 5v6" />
-                      </svg>
-                    )}
-                    <p className={`mt-3 text-lg font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                      {chairData.isOccupied ? 
-                        chairData.isPersonSitting ? 'Person Sitting' : 'Object Placed' 
-                        : 'Empty'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
-                  darkMode 
-                    ? 'bg-gray-800 border-gray-700' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Weight
-                  </p>
-                  <div className="mt-4 flex flex-col items-center">
-                    <div className={`relative w-28 h-28 flex items-center justify-center rounded-full mb-2 shadow-inner ${
-                      darkMode ? 'bg-blue-900 bg-opacity-30' : 'bg-blue-100'
-                    }`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 absolute opacity-30 ${
-                        darkMode ? 'text-blue-400' : 'text-blue-500'
-                      }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                        <line x1="7" y1="7" x2="7.01" y2="7" />
-                      </svg>
-                      <p className={`text-2xl font-bold z-10 ${
-                        darkMode ? 'text-blue-300' : 'text-blue-800'
-                      }`}>
-                        {(chairData.sensor_data.weight_kg).toFixed(0) || '0'}
-                      </p>
-                    </div>
-                    <p className={`text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>kg</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Sitting Position Card - Enhanced Visualization */}
-            <div className={`p-6 rounded-lg shadow-md border ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600' 
-                : 'bg-white border-gray-200'
-            }`}>
-              <h2 className={`mb-5 text-lg font-semibold flex items-center ${
-                darkMode ? 'text-gray-100' : 'text-gray-800'
-              }`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
-                  darkMode ? 'text-blue-400' : 'text-blue-600'
-                }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Sitting Position
-              </h2>
-              <div className={`p-5 rounded-lg border shadow-sm ${
-                darkMode 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
-                {chairData.isPersonSitting ? (
-                  <div className="flex flex-col items-center">
-                    {/* Visual representation of sitting position */}
-                    <div className={`w-44 h-44 relative rounded-lg mb-5 flex items-center justify-center shadow-inner ${
-                      darkMode ? 'bg-blue-900 bg-opacity-20' : 'bg-blue-50'
-                    }`}>
-                      {/* Chair outline */}
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`w-36 h-36 ${
-                        darkMode ? 'text-blue-800' : 'text-blue-200'
-                      }`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="25" y="60" width="50" height="30" rx="2" />
-                        <path d="M30 60 V40 H70 V60" />
-                        <path d="M30 50 H70" />
-                      </svg>
-                      
-                      {/* Person representation based on sensor data */}
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-32 h-32 absolute" viewBox="0 0 100 100">
-                        {/* Head */}
-                        <circle cx="50" cy="35" r="10" fill={chairData.isPersonSitting ? (darkMode ? "#60A5FA" : "#3B82F6") : "transparent"} />
-                        
-                        {/* Torso */}
-                        <path d={`M50 45 L50 ${chairData.sittingPosition === 'Forward Slouch' ? '75' : '65'}`} stroke={darkMode ? "#60A5FA" : "#3B82F6"} strokeWidth="4" />
-                        
-                        {/* Left arm */}
-                        <path d={`M50 50 L${chairData.sensor_data.left_armrest ? '30' : '40'} ${chairData.sensor_data.left_armrest ? '45' : '55'}`} 
-                          stroke={chairData.sensor_data.left_armrest ? 
-                            (darkMode ? "#60A5FA" : "#3B82F6") : 
-                            (darkMode ? "#93C5FD" : "#93C5FD")} 
-                          strokeWidth="4" />
-                        
-                        {/* Right arm */}
-                        <path d={`M50 50 L${chairData.sensor_data.right_armrest ? '70' : '60'} ${chairData.sensor_data.right_armrest ? '45' : '55'}`} 
-                          stroke={chairData.sensor_data.right_armrest ? 
-                            (darkMode ? "#60A5FA" : "#3B82F6") : 
-                            (darkMode ? "#93C5FD" : "#93C5FD")} 
-                          strokeWidth="4" />
-                        
-                        {/* Left leg */}
-                        <path d={`M50 65 L${chairData.sensor_data.left_legrest ? '40' : '45'} 85`} 
-                          stroke={chairData.sensor_data.left_legrest ? 
-                            (darkMode ? "#60A5FA" : "#3B82F6") : 
-                            (darkMode ? "#93C5FD" : "#93C5FD")} 
-                          strokeWidth="4" />
-                        
-                        {/* Right leg */}
-                        <path d={`M50 65 L${chairData.sensor_data.right_legrest ? '60' : '55'} 85`} 
-                          stroke={chairData.sensor_data.right_legrest ? 
-                            (darkMode ? "#60A5FA" : "#3B82F6") : 
-                            (darkMode ? "#93C5FD" : "#93C5FD")} 
-                          strokeWidth="4" />
-                      </svg>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className={`text-lg font-medium mb-2 ${
-                        darkMode ? 'text-gray-100' : 'text-gray-800'
-                      }`}>
-                        {chairData.sittingPosition || 'Normal'}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          chairData.sensor_data.left_armrest ? 
-                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
-                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
-                        }`}>
-                          Left Arm {chairData.sensor_data.left_armrest ? 'Active' : 'Inactive'}
-                        </span>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          chairData.sensor_data.right_armrest ? 
-                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
-                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
-                        }`}>
-                          Right Arm {chairData.sensor_data.right_armrest ? 'Active' : 'Inactive'}
-                        </span>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          chairData.sensor_data.left_legrest ? 
-                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
-                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
-                        }`}>
-                          Left Leg {chairData.sensor_data.left_legrest ? 'Active' : 'Inactive'}
-                        </span>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          chairData.sensor_data.right_legrest ? 
-                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
-                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
-                        }`}>
-                          Right Leg {chairData.sensor_data.right_legrest ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {chairData.positionWarning && (
-                      <div className={`mt-4 p-3 border rounded-lg flex items-start ${
-                        darkMode 
-                          ? 'bg-yellow-900 bg-opacity-30 border-yellow-800 text-yellow-300' 
-                          : 'bg-yellow-50 border-yellow-100 text-yellow-700'
-                      }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
-                          darkMode ? 'text-yellow-400' : 'text-yellow-500'
-                        }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <p className="text-sm">{chairData.positionWarning}</p>
-                      </div>
-                    )}
-                  </div>
+<div className="space-y-8">
+  {/* Status Cards - Improved Grid Layout for Mobile */}
+  <div className="space-y-6 sm:space-y-8">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+      {/* Occupancy and Weight Card - Enhanced Visuals */}
+      <div className={`p-4 sm:p-6 rounded-lg shadow-md border ${
+        darkMode 
+          ? 'bg-gray-700 border-gray-600' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <h2 className={`mb-4 sm:mb-5 text-lg font-semibold flex items-center ${
+          darkMode ? 'text-gray-100' : 'text-gray-800'
+        }`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+            darkMode ? 'text-blue-400' : 'text-blue-600'
+          }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Chair Status
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          <div className={`p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+            darkMode 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Occupancy
+            </p>
+            <div className="mt-3 sm:mt-4 flex flex-col items-center">
+              {chairData.isOccupied ? (
+                chairData.isPersonSitting ? (
+                  /* Person sitting icon */
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-16 sm:h-20 w-16 sm:w-20 ${
+                    darkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+                    <rect x="8" y="15" width="8" height="6" rx="1" />
+                  </svg>
                 ) : (
-                  <div className="p-6 text-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 mx-auto mb-3 ${
-                      darkMode ? 'text-gray-500' : 'text-gray-400'
-                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                    </svg>
-                    <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                      No sitting position data available
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Pressure Distribution Component */}
-            {chairData && (
-              <PressureDistribution 
-                sensorData={chairData} 
-                darkMode={darkMode}
-              />
-            )}
-          </div>
-          
-          {/* Usage Statistics Card - Enhanced Design */}
-          <div className={`p-6 rounded-lg shadow-md border ${
-            darkMode 
-              ? 'bg-gray-700 border-gray-600' 
-              : 'bg-white border-gray-200'
-          }`}>
-            <h2 className={`mb-5 text-lg font-semibold flex items-center ${
-              darkMode ? 'text-gray-100' : 'text-gray-800'
-            }`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
-                darkMode ? 'text-blue-400' : 'text-blue-600'
-              }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Usage Statistics
-            </h2>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
-                darkMode 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
-                <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Current session
-                </p>
-                <div className="mt-3 flex items-end">
-                  <p className={`text-2xl font-semibold ${
-                    darkMode ? 'text-blue-400' : 'text-blue-600'
-                  }`}>
-                    {currentSessionMinutes}:{currentSessionSeconds.toString().padStart(2, '0')}
-                  </p>
-                  <span className={`text-sm font-normal ml-1 mb-1 ${
+                  /* Box/object icon */
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-16 sm:h-20 w-16 sm:w-20 ${
                     darkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>min:sec</span>
-                </div>
-                <div className={`mt-3 w-full rounded-full h-3 ${
-                  darkMode ? 'bg-gray-600' : 'bg-gray-200'
-                }`}>
-                  <div className={`h-3 rounded-full ${
-                    darkMode ? 'bg-blue-500' : 'bg-blue-600'
-                  }`} style={{ 
-                    width: `${Math.min(((currentSessionMinutes * 60 + currentSessionSeconds) / (10 * 60)) * 100, 100)}%` 
-                  }}></div>
-                </div>
-              </div>
-              
-              <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
-                darkMode 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
-                <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Today's sitting time
-                </p>
-                <div className="mt-3 flex items-end">
-                  <p className={`text-2xl font-semibold ${
-                    darkMode ? 'text-blue-400' : 'text-blue-600'
-                  }`}>
-                    {Math.floor(totalMinutes)}:{Math.floor((totalMinutes * 60) % 60).toString().padStart(2, '0')}
-                  </p>
-                  <span className={`text-sm font-normal ml-1 mb-1 ${
-                    darkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>hr:min</span>
-                </div>
-                <div className={`mt-3 w-full rounded-full h-3 ${
-                  darkMode ? 'bg-gray-600' : 'bg-gray-200'
-                }`}>
-                  <div className={`h-3 rounded-full ${
-                    darkMode ? 'bg-blue-500' : 'bg-blue-600'
-                  }`} style={{ width: `${Math.min((totalMinutes / 120) * 100, 100)}%` }}></div>
-                </div>
-              </div>
-              
-              <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
-                darkMode 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
-                <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Position Changes
-                </p>
-                <div className="mt-3 flex items-end">
-                  <p className={`text-2xl font-semibold ${
-                    darkMode ? 'text-blue-400' : 'text-blue-600'
-                  }`}>
-                    {chairData.positionChanges || 0}
-                  </p>
-                  <span className={`text-sm font-normal ml-1 mb-1 ${
-                    darkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>today</span>
-                </div>
-                <div className={`mt-3 w-full rounded-full h-3 ${
-                  darkMode ? 'bg-gray-600' : 'bg-gray-200'
-                }`}>
-                  <div className={`h-3 rounded-full ${
-                    darkMode ? 'bg-blue-500' : 'bg-blue-600'
-                  }`} style={{ width: `${Math.min((chairData.positionChanges || 0) * 5, 100)}%` }}></div>
-                </div>
-              </div>
+                  }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 8v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8l9-4 9 4z" />
+                    <path d="M12 4v16M3 8h18" />
+                  </svg>
+                )
+              ) : (
+                /* Empty chair icon */
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-16 sm:h-20 w-16 sm:w-20 ${
+                  darkMode ? 'text-gray-500' : 'text-gray-400'
+                }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="6" y="11" width="12" height="10" rx="2" />
+                  <path d="M5 19h14M10 5v6M14 5v6" />
+                </svg>
+              )}
+              <p className={`mt-2 sm:mt-3 text-base sm:text-lg font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                {chairData.isOccupied ? 
+                  chairData.isPersonSitting ? 'Person Sitting' : 'Object Placed' 
+                  : 'Empty'}
+              </p>
             </div>
           </div>
           
-          {/* Recommendations - Enhanced Card Design */}
-          <div className={`p-6 rounded-lg shadow-md border ${
+          <div className={`p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
             darkMode 
-              ? 'bg-blue-900 bg-opacity-20 border-blue-800' 
-              : 'bg-blue-50 border-blue-200'
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-gray-50 border-gray-200'
           }`}>
-            <h2 className={`mb-5 text-lg font-semibold flex items-center ${
-              darkMode ? 'text-blue-300' : 'text-blue-800'
-            }`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
-                darkMode ? 'text-blue-400' : 'text-blue-600'
-              }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Health Recommendations
-            </h2>
-            
-            <div className="space-y-5">
-              {chairData.isPersonSitting && chairData.minutes > 120 && (
-                <div className={`flex items-start p-4 rounded-lg border ${
-                  darkMode 
-                    ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
-                    : 'bg-white bg-opacity-70 border-blue-100'
+            <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Weight
+            </p>
+            <div className="mt-3 sm:mt-4 flex flex-col items-center">
+              <div className={`relative w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center rounded-full mb-2 shadow-inner ${
+                darkMode ? 'bg-blue-900 bg-opacity-30' : 'bg-blue-100'
+              }`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-10 w-10 sm:h-12 sm:w-12 absolute opacity-30 ${
+                  darkMode ? 'text-blue-400' : 'text-blue-500'
+                }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                  <line x1="7" y1="7" x2="7.01" y2="7" />
+                </svg>
+                <p className={`text-xl sm:text-2xl font-bold z-10 ${
+                  darkMode ? 'text-blue-300' : 'text-blue-800'
                 }`}>
-                  <div className={`flex-shrink-0 rounded-full p-2 mr-4 ${
-                    darkMode ? 'bg-blue-900' : 'bg-blue-200'
-                  }`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${
-                      darkMode ? 'text-blue-400' : 'text-blue-600'
-                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className={`text-md font-medium ${
-                      darkMode ? 'text-blue-300' : 'text-blue-800'
-                    }`}>Take a Break</h3>
-                    <p className={`text-sm ${
-                      darkMode ? 'text-blue-200' : 'text-blue-700'
-                    }`}>You've been sitting for {chairData.minutes} minutes today. Consider taking a 5-minute break to stretch and move around.</p>
-                  </div>
-                </div>
-              )}
-                  
-              {chairData.isPersonSitting && chairData.positionChanges < 5 && chairData.hours > 1 && (
-                <div className={`flex items-start p-4 rounded-lg border ${
-                  darkMode 
-                    ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
-                    : 'bg-white bg-opacity-70 border-blue-100'
-                }`}>
-                  <div className={`flex-shrink-0 rounded-full p-2 mr-4 ${
-                    darkMode ? 'bg-blue-900' : 'bg-blue-200'
-                  }`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${
-                      darkMode ? 'text-blue-400' : 'text-blue-600'
-                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className={`text-md font-medium ${
-                      darkMode ? 'text-blue-300' : 'text-blue-800'
-                    }`}>Change Position</h3>
-                    <p className={`text-sm ${
-                      darkMode ? 'text-blue-200' : 'text-blue-700'
-                    }`}>Try to shift positions more frequently. Aim for at least 8-10 position changes per hour to improve circulation.</p>
-                  </div>
-                </div>
-              )}
-              
-              {chairData.positionWarning && (
-                <div className={`flex items-start p-4 rounded-lg border ${
-                  darkMode 
-                    ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
-                    : 'bg-white bg-opacity-70 border-blue-100'
-                }`}>
-                  <div className={`flex-shrink-0 rounded-full p-2 mr-4 ${
-                    darkMode ? 'bg-blue-900' : 'bg-blue-200'
-                  }`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${
-                      darkMode ? 'text-blue-400' : 'text-blue-600'
-                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className={`text-md font-medium ${
-                      darkMode ? 'text-blue-300' : 'text-blue-800'
-                    }`}>Improve Posture</h3>
-                    <p className={`text-sm ${
-                      darkMode ? 'text-blue-200' : 'text-blue-700'
-                    }`}>{chairData.positionWarning} A balanced posture can reduce strain on your back and neck.</p>
-                  </div>
-                </div>
-              )}
-              
-              {!aiModeEnabled && (
-              <div className="mt-6 flex justify-center">
-                <ManualTaskButton />
-                {/* <PressureDistribution sensorData={chairData} darkMode={darkMode}/> */}
+                  {(chairData.sensor_data.weight_kg).toFixed(0) || '0'}
+                </p>
               </div>
-            )}
+              <p className={`text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>kg</p>
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Sitting Position Card - Enhanced Visualization */}
+      <div className={`p-4 sm:p-6 rounded-lg shadow-md border ${
+        darkMode 
+          ? 'bg-gray-700 border-gray-600' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <h2 className={`mb-4 sm:mb-5 text-lg font-semibold flex items-center ${
+          darkMode ? 'text-gray-100' : 'text-gray-800'
+        }`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+            darkMode ? 'text-blue-400' : 'text-blue-600'
+          }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          Sitting Position
+        </h2>
+        <div className={`p-3 sm:p-5 rounded-lg border shadow-sm ${
+          darkMode 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-gray-50 border-gray-200'
+        }`}>
+          {chairData.isPersonSitting ? (
+            <div className="flex flex-col items-center">
+              {/* Visual representation of sitting position */}
+              <div className={`w-36 h-36 sm:w-44 sm:h-44 relative rounded-lg mb-4 sm:mb-5 flex items-center justify-center shadow-inner ${
+                darkMode ? 'bg-blue-900 bg-opacity-20' : 'bg-blue-50'
+              }`}>
+                {/* Chair outline */}
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-28 h-28 sm:w-36 sm:h-36 ${
+                  darkMode ? 'text-blue-800' : 'text-blue-200'
+                }`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="25" y="60" width="50" height="30" rx="2" />
+                  <path d="M30 60 V40 H70 V60" />
+                  <path d="M30 50 H70" />
+                </svg>
+                
+                {/* Person representation based on sensor data */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-24 h-24 sm:w-32 sm:h-32 absolute" viewBox="0 0 100 100">
+                  {/* Head */}
+                  <circle cx="50" cy="35" r="10" fill={chairData.isPersonSitting ? (darkMode ? "#60A5FA" : "#3B82F6") : "transparent"} />
+                  
+                  {/* Torso */}
+                  <path d={`M50 45 L50 ${chairData.sittingPosition === 'Forward Slouch' ? '75' : '65'}`} stroke={darkMode ? "#60A5FA" : "#3B82F6"} strokeWidth="4" />
+                  
+                  {/* Left arm */}
+                  <path d={`M50 50 L${chairData.sensor_data.left_armrest ? '30' : '40'} ${chairData.sensor_data.left_armrest ? '45' : '55'}`} 
+                    stroke={chairData.sensor_data.left_armrest ? 
+                      (darkMode ? "#60A5FA" : "#3B82F6") : 
+                      (darkMode ? "#93C5FD" : "#93C5FD")} 
+                    strokeWidth="4" />
+                  
+                  {/* Right arm */}
+                  <path d={`M50 50 L${chairData.sensor_data.right_armrest ? '70' : '60'} ${chairData.sensor_data.right_armrest ? '45' : '55'}`} 
+                    stroke={chairData.sensor_data.right_armrest ? 
+                      (darkMode ? "#60A5FA" : "#3B82F6") : 
+                      (darkMode ? "#93C5FD" : "#93C5FD")} 
+                    strokeWidth="4" />
+                  
+                  {/* Left leg */}
+                  <path d={`M50 65 L${chairData.sensor_data.left_legrest ? '40' : '45'} 85`} 
+                    stroke={chairData.sensor_data.left_legrest ? 
+                      (darkMode ? "#60A5FA" : "#3B82F6") : 
+                      (darkMode ? "#93C5FD" : "#93C5FD")} 
+                    strokeWidth="4" />
+                  
+                  {/* Right leg */}
+                  <path d={`M50 65 L${chairData.sensor_data.right_legrest ? '60' : '55'} 85`} 
+                    stroke={chairData.sensor_data.right_legrest ? 
+                      (darkMode ? "#60A5FA" : "#3B82F6") : 
+                      (darkMode ? "#93C5FD" : "#93C5FD")} 
+                    strokeWidth="4" />
+                </svg>
+              </div>
+              
+              <div className="text-center">
+                <p className={`text-base sm:text-lg font-medium mb-2 ${
+                  darkMode ? 'text-gray-100' : 'text-gray-800'
+                }`}>
+                  {chairData.sittingPosition || 'Normal'}
+                </p>
+                
+                <div className="flex flex-wrap gap-1 sm:gap-2 justify-center">
+                  <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
+                    chairData.sensor_data.left_armrest ? 
+                      (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                      (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                  }`}>
+                    L Arm {chairData.sensor_data.left_armrest ? 'On' : 'Off'}
+                  </span>
+                  <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
+                    chairData.sensor_data.right_armrest ? 
+                      (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                      (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                  }`}>
+                    R Arm {chairData.sensor_data.right_armrest ? 'On' : 'Off'}
+                  </span>
+                  <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
+                    chairData.sensor_data.left_legrest ? 
+                      (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                      (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                  }`}>
+                    L Leg {chairData.sensor_data.left_legrest ? 'On' : 'Off'}
+                  </span>
+                  <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
+                    chairData.sensor_data.right_legrest ? 
+                      (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                      (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                  }`}>
+                    R Leg {chairData.sensor_data.right_legrest ? 'On' : 'Off'}
+                  </span>
+                </div>
+              </div>
+              
+              {chairData.positionWarning && (
+                <div className={`mt-3 sm:mt-4 p-2 sm:p-3 border rounded-lg flex items-start ${
+                  darkMode 
+                    ? 'bg-yellow-900 bg-opacity-30 border-yellow-800 text-yellow-300' 
+                    : 'bg-yellow-50 border-yellow-100 text-yellow-700'
+                }`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 sm:h-5 w-4 sm:w-5 mr-2 flex-shrink-0 mt-0.5 ${
+                    darkMode ? 'text-yellow-400' : 'text-yellow-500'
+                  }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <p className="text-xs sm:text-sm">{chairData.positionWarning}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-4 sm:p-6 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-16 sm:h-20 w-16 sm:w-20 mx-auto mb-3 ${
+                darkMode ? 'text-gray-500' : 'text-gray-400'
+              }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+              </svg>
+              <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                No sitting position data available
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+    
+    {/* Pressure Distribution Component - Full Width and Separated */}
+    {chairData && (
+      <PressureDistribution 
+        sensorData={chairData} 
+        darkMode={darkMode}
+      />
+    )}
+  </div>
+  
+  {/* Usage Statistics Card - Enhanced Design */}
+  <div className={`p-4 sm:p-6 rounded-lg shadow-md border ${
+    darkMode 
+      ? 'bg-gray-700 border-gray-600' 
+      : 'bg-white border-gray-200'
+  }`}>
+    <h2 className={`mb-4 sm:mb-5 text-lg font-semibold flex items-center ${
+      darkMode ? 'text-gray-100' : 'text-gray-800'
+    }`}>
+      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+        darkMode ? 'text-blue-400' : 'text-blue-600'
+      }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+      Usage Statistics
+    </h2>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
+      <div className={`p-4 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+        darkMode 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-gray-50 border-gray-200'
+      }`}>
+        <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          Current session
+        </p>
+        <div className="mt-2 sm:mt-3 flex items-end">
+          <p className={`text-xl sm:text-2xl font-semibold ${
+            darkMode ? 'text-blue-400' : 'text-blue-600'
+          }`}>
+            {currentSessionMinutes}:{currentSessionSeconds.toString().padStart(2, '0')}
+          </p>
+          <span className={`text-xs sm:text-sm font-normal ml-1 mb-1 ${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>min:sec</span>
+        </div>
+        <div className={`mt-2 sm:mt-3 w-full rounded-full h-3 ${
+          darkMode ? 'bg-gray-600' : 'bg-gray-200'
+        }`}>
+          <div className={`h-3 rounded-full ${
+            darkMode ? 'bg-blue-500' : 'bg-blue-600'
+          }`} style={{ 
+            width: `${Math.min(((currentSessionMinutes * 60 + currentSessionSeconds) / (10 * 60)) * 100, 100)}%` 
+          }}></div>
+        </div>
+      </div>
+      
+      <div className={`p-4 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+        darkMode 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-gray-50 border-gray-200'
+      }`}>
+        <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          Today's sitting time
+        </p>
+        <div className="mt-2 sm:mt-3 flex items-end">
+          <p className={`text-xl sm:text-2xl font-semibold ${
+            darkMode ? 'text-blue-400' : 'text-blue-600'
+          }`}>
+            {Math.floor(totalMinutes)}:{Math.floor((totalMinutes * 60) % 60).toString().padStart(2, '0')}
+          </p>
+          <span className={`text-xs sm:text-sm font-normal ml-1 mb-1 ${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>hr:min</span>
+        </div>
+        <div className={`mt-2 sm:mt-3 w-full rounded-full h-3 ${
+          darkMode ? 'bg-gray-600' : 'bg-gray-200'
+        }`}>
+          <div className={`h-3 rounded-full ${
+            darkMode ? 'bg-blue-500' : 'bg-blue-600'
+          }`} style={{ width: `${Math.min((totalMinutes / 120) * 100, 100)}%` }}></div>
+        </div>
+      </div>
+      
+      <div className={`p-4 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+        darkMode 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-gray-50 border-gray-200'
+      }`}>
+        <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          Position Changes
+        </p>
+        <div className="mt-2 sm:mt-3 flex items-end">
+          <p className={`text-xl sm:text-2xl font-semibold ${
+            darkMode ? 'text-blue-400' : 'text-blue-600'
+          }`}>
+            {chairData.positionChanges || 0}
+          </p>
+          <span className={`text-xs sm:text-sm font-normal ml-1 mb-1 ${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>today</span>
+        </div>
+        <div className={`mt-2 sm:mt-3 w-full rounded-full h-3 ${
+          darkMode ? 'bg-gray-600' : 'bg-gray-200'
+        }`}>
+          <div className={`h-3 rounded-full ${
+            darkMode ? 'bg-blue-500' : 'bg-blue-600'
+          }`} style={{ width: `${Math.min((chairData.positionChanges || 0) * 5, 100)}%` }}></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {/* Recommendations - Enhanced Card Design */}
+  <div className={`p-4 sm:p-6 rounded-lg shadow-md border ${
+    darkMode 
+      ? 'bg-blue-900 bg-opacity-20 border-blue-800' 
+      : 'bg-blue-50 border-blue-200'
+  }`}>
+    <h2 className={`mb-4 sm:mb-5 text-lg font-semibold flex items-center ${
+      darkMode ? 'text-blue-300' : 'text-blue-800'
+    }`}>
+      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+        darkMode ? 'text-blue-400' : 'text-blue-600'
+      }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      Health Recommendations
+    </h2>
+    
+    <div className="space-y-4 sm:space-y-5">
+      {chairData.isPersonSitting && chairData.minutes > 120 && (
+        <div className={`flex items-start p-3 sm:p-4 rounded-lg border ${
+          darkMode 
+            ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
+            : 'bg-white bg-opacity-70 border-blue-100'
+        }`}>
+          <div className={`flex-shrink-0 rounded-full p-2 mr-3 sm:mr-4 ${
+            darkMode ? 'bg-blue-900' : 'bg-blue-200'
+          }`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 sm:h-5 w-4 sm:w-5 ${
+              darkMode ? 'text-blue-400' : 'text-blue-600'
+            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className={`text-sm sm:text-md font-medium ${
+              darkMode ? 'text-blue-300' : 'text-blue-800'
+            }`}>Take a Break</h3>
+            <p className={`text-xs sm:text-sm ${
+              darkMode ? 'text-blue-200' : 'text-blue-700'
+            }`}>You've been sitting for {chairData.minutes} minutes today. Consider taking a 5-minute break to stretch and move around.</p>
+          </div>
+        </div>
+      )}
+          
+      {chairData.isPersonSitting && chairData.positionChanges < 5 && chairData.hours > 1 && (
+        <div className={`flex items-start p-3 sm:p-4 rounded-lg border ${
+          darkMode 
+            ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
+            : 'bg-white bg-opacity-70 border-blue-100'
+        }`}>
+          <div className={`flex-shrink-0 rounded-full p-2 mr-3 sm:mr-4 ${
+            darkMode ? 'bg-blue-900' : 'bg-blue-200'
+          }`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 sm:h-5 w-4 sm:w-5 ${
+              darkMode ? 'text-blue-400' : 'text-blue-600'
+            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <div>
+            <h3 className={`text-sm sm:text-md font-medium ${
+              darkMode ? 'text-blue-300' : 'text-blue-800'
+            }`}>Change Position</h3>
+            <p className={`text-xs sm:text-sm ${
+              darkMode ? 'text-blue-200' : 'text-blue-700'
+            }`}>Try to shift positions more frequently. Aim for at least 8-10 position changes per hour to improve circulation.</p>
+          </div>
+        </div>
+      )}
+      
+      {chairData.positionWarning && (
+        <div className={`flex items-start p-3 sm:p-4 rounded-lg border ${
+          darkMode 
+            ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
+            : 'bg-white bg-opacity-70 border-blue-100'
+        }`}>
+          <div className={`flex-shrink-0 rounded-full p-2 mr-3 sm:mr-4 ${
+            darkMode ? 'bg-blue-900' : 'bg-blue-200'
+          }`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 sm:h-5 w-4 sm:w-5 ${
+              darkMode ? 'text-blue-400' : 'text-blue-600'
+            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          <div>
+            <h3 className={`text-sm sm:text-md font-medium ${
+              darkMode ? 'text-blue-300' : 'text-blue-800'
+            }`}>Improve Posture</h3>
+            <p className={`text-xs sm:text-sm ${
+              darkMode ? 'text-blue-200' : 'text-blue-700'
+            }`}>{chairData.positionWarning} A balanced posture can reduce strain on your back and neck.</p>
+          </div>
+        </div>
+      )}
+      
+      {!aiModeEnabled && (
+        <div className="mt-4 sm:mt-6 flex justify-center">
+          <ManualTaskButton />
+        </div>
+      )}
+    </div>
+  </div>
+</div>
         
         {/* Task Modal */}
         <TaskModal />
