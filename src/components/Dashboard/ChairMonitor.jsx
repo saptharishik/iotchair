@@ -13,6 +13,7 @@ const ChairMonitor = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showHydrationAlert, setShowHydrationAlert] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   
   // State for critical values
   const [totalMinutes, setTotalMinutes] = useState(0);
@@ -26,7 +27,7 @@ const ChairMonitor = () => {
   const [taskInProgress, setTaskInProgress] = useState(false);
   const [taskTimeRemaining, setTaskTimeRemaining] = useState(0);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [aiModeEnabled, setAiModeEnabled] = useState(true);
+  const [aiModeEnabled, setAiModeEnabled] = useState(false);
   const [lastPositionChangeTime, setLastPositionChangeTime] = useState(Date.now());
   const [taskCooldownActive, setTaskCooldownActive] = useState(false);
   const [userBehaviorData, setUserBehaviorData] = useState([]);
@@ -45,6 +46,18 @@ const ChairMonitor = () => {
   const timerIntervalRef = useRef(null);
   const taskTimerRef = useRef(null);
   
+  useEffect(() => {
+    const savedMode = localStorage.getItem('darkMode');
+    if (savedMode === 'true') {
+      setDarkMode(true);
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    localStorage.setItem('darkMode', newMode.toString());
+  };
   
   
   useEffect(() => {
@@ -1593,14 +1606,13 @@ setTimeout(() => {
   };
 
   // Manual Task Button component
-const ManualTaskButton = () => {
-  if (!chairData?.isPersonSitting) return null;
-  
-  return (
-    <button
+  const ManualTaskButton = () => {
+    if (!chairData?.isPersonSitting) return null;
+    
+    return (
+      <button
       onClick={() => {
         if (taskCooldownActive) {
-          // Show message that we're in cooldown
           alert("Please wait before generating new tasks. Your body needs rest between activity sessions.");
           return;
         }
@@ -1619,15 +1631,14 @@ const ManualTaskButton = () => {
           console.error("Error generating AI tasks:", err);
         });
       }}
-      className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center justify-center"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-      {aiModeEnabled ? "Generate AI Health Tasks Now" : "Get Health Recommendations"}
-    </button>
-  );
-};
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        {aiModeEnabled ? "Generate AI Health Tasks Now" : "Get Health Recommendations"}
+      </button>
+    );
+  };
 
   // Task Modal Component
   const TaskModal = () => {
@@ -1639,9 +1650,11 @@ const ManualTaskButton = () => {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 overflow-hidden">
+        <div className={`rounded-xl shadow-lg w-full max-w-md mx-4 overflow-hidden transition-colors ${
+          darkMode ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-800'
+        }`}>
           {/* Header */}
-          <div className="bg-blue-600 px-6 py-4 text-white">
+          <div className={`px-6 py-4 ${darkMode ? 'bg-blue-800' : 'bg-blue-600'} text-white`}>
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-semibold">
                 {lstmModelReady && userBehaviorData.length >= 3 ? 
@@ -1649,7 +1662,7 @@ const ManualTaskButton = () => {
                   'Health Recommendation'}
               </h3>
               {!taskInProgress && (
-                <button onClick={dismissAiMode} className="text-white hover:text-gray-200">
+                <button onClick={() => setShowTaskModal(false)} className="text-white hover:text-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -1662,19 +1675,27 @@ const ManualTaskButton = () => {
           <div className="px-6 py-4">
             {!taskInProgress ? (
               <>
-                <p className="mb-4 text-gray-600">
+                <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   You've been sitting for {currentSessionMinutes}:{currentSessionSeconds.toString().padStart(2, '0')} minutes.
                   Here's a recommended activity to improve your health:
                 </p>
                 
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
-                  <h4 className="font-bold text-lg text-blue-800">{currentTask.title}</h4>
-                  <p className="text-blue-700">{currentTask.description}</p>
-                  <p className="mt-2 text-sm text-blue-600">Duration: {Math.round(currentTask.duration * 60)} seconds</p>
+                <div className={`p-4 rounded-lg border mb-4 ${
+                  darkMode 
+                    ? 'bg-blue-900 bg-opacity-30 border-blue-800 text-blue-200' 
+                    : 'bg-blue-50 border-blue-100 text-blue-700'
+                }`}>
+                  <h4 className={`font-bold text-lg ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+                    {currentTask.title}
+                  </h4>
+                  <p>{currentTask.description}</p>
+                  <p className={`mt-2 text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                    Duration: {Math.round(currentTask.duration * 60)} seconds
+                  </p>
                   
                   {currentTask.personalizedReason && (
-                    <div className="mt-3 pt-3 border-t border-blue-200">
-                      <p className="text-sm text-blue-600 italic">
+                    <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-blue-800' : 'border-blue-200'}`}>
+                      <p className={`text-sm italic ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                         <span className="font-medium">Why this recommendation:</span> {currentTask.personalizedReason}
                       </p>
                     </div>
@@ -1682,34 +1703,52 @@ const ManualTaskButton = () => {
                 </div>
                 
                 <div className="flex justify-between">
-                  <button 
-                    onClick={skipTask}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-                  >
-                    Skip
-                  </button>
-                  <button 
-                    onClick={startTask}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Start Task
-                  </button>
-                </div>
+                <button 
+                  onClick={skipTask}
+                  className={`px-4 py-2 rounded-lg ${
+                    darkMode 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
+                >
+                  Skip
+                </button>
+                <button 
+                  onClick={startTask}
+                  className={`px-4 py-2 rounded-lg ${
+                    darkMode 
+                      ? 'bg-blue-700 text-white hover:bg-blue-600' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  Start Task
+                </button>
+              </div>
               </>
             ) : (
               <>
                 <div className="text-center py-6">
-                  <h4 className="font-bold text-xl text-blue-800 mb-2">{currentTask.title}</h4>
-                  <p className="text-gray-700 mb-6">{currentTask.description}</p>
+                  <h4 className={`font-bold text-xl mb-2 ${
+                    darkMode ? 'text-blue-300' : 'text-blue-800'
+                  }`}>{currentTask.title}</h4>
+                  <p className={darkMode ? 'text-gray-300' : 'text-gray-700'} className="mb-6">
+                    {currentTask.description}
+                  </p>
                   
                   {currentTask.completed ? (
                     <div className="flex flex-col items-center">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${
+                        darkMode ? 'bg-green-900 bg-opacity-40' : 'bg-green-100'
+                      }`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-10 w-10 ${
+                          darkMode ? 'text-green-400' : 'text-green-600'
+                        }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <p className="text-lg font-medium text-green-600">Task Completed!</p>
+                      <p className={`text-lg font-medium ${
+                        darkMode ? 'text-green-400' : 'text-green-600'
+                      }`}>Task Completed!</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
@@ -1717,21 +1756,25 @@ const ManualTaskButton = () => {
                         <svg className="w-full h-full" viewBox="0 0 100 100">
                           <circle 
                             cx="50" cy="50" r="45" fill="none" 
-                            stroke="#E5E7EB" strokeWidth="10" 
+                            stroke={darkMode ? "#4B5563" : "#E5E7EB"} strokeWidth="10" 
                           />
                           <circle 
                             cx="50" cy="50" r="45" fill="none" 
-                            stroke="#3B82F6" strokeWidth="10" 
+                            stroke={darkMode ? "#3B82F6" : "#3B82F6"} strokeWidth="10" 
                             strokeDasharray="283" 
                             strokeDashoffset={283 - (283 * (taskTimeRemaining / (currentTask.duration * 60)))}
                             transform="rotate(-90 50 50)"
                           />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-2xl font-bold text-blue-600">{formatTime(taskTimeRemaining)}</span>
+                          <span className={`text-2xl font-bold ${
+                            darkMode ? 'text-blue-400' : 'text-blue-600'
+                          }`}>{formatTime(taskTimeRemaining)}</span>
                         </div>
                       </div>
-                      <p className="text-gray-600">Complete the task before the timer ends</p>
+                      <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                        Complete the task before the timer ends
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1745,124 +1788,221 @@ const ManualTaskButton = () => {
  
   // Render the component
   if (loading) {
-    return <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
-      <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-    </div>;
+    return (
+      <div className={`fixed inset-0 flex items-center justify-center z-50 transition-colors duration-300 ${
+        darkMode ? 'bg-gray-900' : 'bg-white'
+      }`}>
+        <div className={`w-16 h-16 border-4 rounded-full animate-spin ${
+          darkMode 
+            ? 'border-gray-800 border-t-blue-500' 
+            : 'border-gray-200 border-t-blue-600'
+        }`}></div>
+      </div>
+    );
   }
 
+
   if (error) {
-    return <div className="error">{error}</div>;
+    return (
+      <div className={`error p-4 rounded-lg ${
+        darkMode ? 'bg-red-900 bg-opacity-30 text-red-300' : 'bg-red-50 text-red-700'
+      }`}>{error}</div>
+    );
   }
 
   if (!chairData) {
-    return <div className="no-data">No chair data available</div>;
+    return (
+      <div className={`no-data p-4 text-center ${
+        darkMode ? 'text-gray-400' : 'text-gray-600'
+      }`}>No chair data available</div>
+    );
   }
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-100">
-      <div className="w-full max-w-4xl px-8 py-10 mx-4 bg-white rounded-xl shadow-lg">
-        {/* Logo and Header */}
-        <div className="flex items-center justify-between mb-8">
+    <div className={`flex items-center justify-center min-h-screen transition-colors duration-300 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950' 
+        : 'bg-gradient-to-br from-blue-100 to-indigo-100'
+    }`}>
+      <div className={`w-full max-w-4xl px-8 py-10 mx-4 rounded-xl shadow-lg transition-colors duration-300 ${
+        darkMode 
+          ? 'bg-gray-800 text-gray-100' 
+          : 'bg-white text-gray-800'
+      }`}>
+        {/* Dark Mode Toggle */}
+        <div className="absolute top-4 right-4">
+          <button 
+            onClick={toggleDarkMode}
+            className={`p-2 rounded-full transition-colors duration-300 ${
+              darkMode 
+                ? 'bg-gray-700 text-yellow-300 hover:bg-gray-600' 
+                : 'bg-gray-200 text-indigo-600 hover:bg-gray-300'
+            }`}
+            aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
+          >
+            {darkMode ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+              </svg>
+            )}
+          </button>
+        </div>
+      
+        {/* Header Section with Improved Styling */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mr-4 shadow-md ${
+              darkMode ? 'bg-blue-700' : 'bg-blue-600'
+            }`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2v6m0 12v2M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24M14.83 9.17l4.24-4.24" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Chair #{chairId} Monitor</h1>
-              <p className="text-gray-600">Smart Chair Monitoring System</p>
+              <h1 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                Chair #{chairId} Monitor
+              </h1>
+              <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                Smart Chair Monitoring System
+              </p>
             </div>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
-              className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-              onClick={navigateToActivityLog}
+              className={`px-4 py-2.5 rounded-lg shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                darkMode 
+                  ? 'bg-green-700 text-white hover:bg-green-600 focus:ring-green-600 focus:ring-offset-gray-800' 
+                  : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 focus:ring-offset-white'
+              }`}
+              onClick={() => navigate(`/chair-activity/${chairId}`)}
             >
-              View Activity Log
+              <div className="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                View Activity Log
+              </div>
             </button>
             <button
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className={`px-4 py-2.5 rounded-lg shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                darkMode 
+                  ? 'bg-blue-700 text-white hover:bg-blue-600 focus:ring-blue-600 focus:ring-offset-gray-800' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-white'
+              }`}
               onClick={() => navigate('/chair-selection')}
             >
-              Back to Chairs
+              <div className="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Chairs
+              </div>
             </button>
           </div>
         </div>
         
-        {/* AI mode is now enabled by default - toggle removed */}
-        
-        <div className="mb-4 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600 text-right">
+        {/* Last Updated Info - Improved Styling */}
+        <div className={`mb-4 px-4 py-3 rounded-lg border shadow-sm ${
+          darkMode 
+            ? 'bg-gray-700 border-gray-600' 
+            : 'bg-gray-50 border-gray-200'
+        }`}>
+          <p className={`text-sm text-right ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             <span className="font-medium">Last updated on </span>
-            <span className="font-medium text-blue-600">{chairData.sensor_data.timestamp}</span> 
+            <span className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+              {chairData.sensor_data.timestamp}
+            </span> 
           </p>
         </div>
-        {/* Mode Toggle Switch */}
-        <div className="mb-6 p-4 bg-white rounded-lg shadow border border-gray-100">
+        
+        {/* Mode Toggle Switch - Improved Styling */}
+        <div className={`mb-6 p-6 rounded-lg shadow-md border ${
+          darkMode 
+            ? 'bg-gray-700 border-gray-600' 
+            : 'bg-white border-gray-200'
+        }`}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium text-gray-800">Operation Mode</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                Operation Mode
+              </h3>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 {aiModeEnabled ? 
                   "AI Mode: Automatic health reminders enabled" : 
                   "Normal Mode: Only manual health reminders"}
               </p>
             </div>
             <div className="flex items-center">
-              <span className={`mr-2 text-sm ${!aiModeEnabled ? "font-medium text-gray-800" : "text-gray-500"}`}>
+              <span className={`mr-2 text-sm ${
+                !aiModeEnabled 
+                  ? darkMode ? "font-medium text-gray-100" : "font-medium text-gray-800" 
+                  : darkMode ? "text-gray-500" : "text-gray-500"
+              }`}>
                 Normal
               </span>
-              <div className="relative inline-block w-12 mr-2 align-middle select-none">
+              <div className="relative inline-block w-14 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
                   name="toggle" 
                   id="toggle" 
                   checked={aiModeEnabled}
                   onChange={() => {
-                    const newMode = !aiModeEnabled;
-                    setAiModeEnabled(newMode);
-                    
-                    // Record mode change in reports
-                    addToReports({
-                      type: newMode ? 'aiModeEnabled' : 'aiModeDisabled',
-                      timestamp: new Date().toISOString()
-                    });
+                    setAiModeEnabled(!aiModeEnabled);
                   }}
                   className="opacity-0 w-0 h-0 absolute"
                 />
                 <label 
                   htmlFor="toggle" 
-                  className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-300 ease-in-out ${aiModeEnabled ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  className={`block overflow-hidden h-7 rounded-full cursor-pointer transition-colors duration-300 ease-in-out ${
+                    aiModeEnabled 
+                      ? darkMode ? 'bg-blue-700' : 'bg-blue-600' 
+                      : darkMode ? 'bg-gray-600' : 'bg-gray-300'
+                  }`}
                 >
                   <span 
-                    className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform duration-300 ease-in-out ${aiModeEnabled ? 'translate-x-6' : 'translate-x-0'}`}
+                    className={`block h-7 w-7 rounded-full bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
+                      aiModeEnabled ? 'translate-x-7' : 'translate-x-0'
+                    }`}
                   ></span>
                 </label>
               </div>
-              <span className={`text-sm ${aiModeEnabled ? "font-medium text-blue-600" : "text-gray-500"}`}>
+              <span className={`text-sm ${
+                aiModeEnabled 
+                  ? darkMode ? "font-medium text-blue-400" : "font-medium text-blue-600" 
+                  : darkMode ? "text-gray-500" : "text-gray-500"
+              }`}>
                 AI
               </span>
             </div>
           </div>
         </div>
-
-
-        
-        {/* Hydration Alert */}
+  
+        {/* Hydration Alert - Improved Styling */}
         {showHydrationAlert && chairData?.isPersonSitting && (
-          <div className="mb-6 p-4 bg-blue-100 border-l-4 border-blue-500 rounded-lg flex items-start justify-between">
+          <div className={`mb-6 p-4 border-l-4 border-blue-500 rounded-lg flex items-start justify-between shadow-sm ${
+            darkMode 
+              ? 'bg-blue-900 bg-opacity-30' 
+              : 'bg-blue-100'
+          }`}>
             <div className="flex items-start">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 mr-3 flex-shrink-0 ${
+                darkMode ? 'text-blue-400' : 'text-blue-500'
+              }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-blue-700">
+              <p className={darkMode ? 'text-blue-300' : 'text-blue-700'}>
                 <span className="font-bold">Hydration Reminder:</span> You've been sitting for 0.1+ minutes. Consider getting up for a water break.
               </p>
             </div>
             <button 
-              onClick={dismissHydrationAlert}
-              className="ml-4 text-blue-500 hover:text-blue-700"
+              onClick={() => setShowHydrationAlert(false)}
+              className={`ml-4 transition-colors ${
+                darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:text-blue-700'
+              }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -1871,344 +2011,467 @@ const ManualTaskButton = () => {
           </div>
         )}
         
-        {/* Loading State */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-600">Loading chair data...</p>
-          </div>
-        ) : error ? (
-          /* Error State */
-          <div className="py-8">
-            <div className="p-4 mb-6 text-red-700 bg-red-100 rounded-lg">
-              <div className="flex">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        {/* Chair Data Display - Enhanced Card Design */}
+        <div className="space-y-8">
+          {/* Status Cards - Improved Grid Layout */}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            {/* Occupancy and Weight Card - Enhanced Visuals */}
+            <div className={`p-6 rounded-lg shadow-md border ${
+              darkMode 
+                ? 'bg-gray-700 border-gray-600' 
+                : 'bg-white border-gray-200'
+            }`}>
+              <h2 className={`mb-5 text-lg font-semibold flex items-center ${
+                darkMode ? 'text-gray-100' : 'text-gray-800'
+              }`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+                  darkMode ? 'text-blue-400' : 'text-blue-600'
+                }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {error}
-              </div>
-            </div>
-            <div className="text-center">
-              <button
-                className="px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                onClick={() => navigate('/chair-selection')}
-              >
-                Return to Chair Selection
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Chair Data Display */
-          <div className="space-y-6">
-            {/* Status Cards */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Occupancy and Weight Card */}
-              <div className="p-6 bg-white rounded-lg shadow border border-gray-100">
-                <h2 className="mb-4 text-lg font-semibold text-gray-800 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Chair Status
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                    <p className="text-sm text-gray-600">Occupancy</p>
-                    <div className="mt-4 flex flex-col items-center">
-                      {chairData.isOccupied ? (
-                        chairData.isPersonSitting ? (
-                          /* Person sitting icon */
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="7" r="4" />
-                            <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
-                            <rect x="8" y="15" width="8" height="6" rx="1" />
-                          </svg>
-                        ) : (
-                          /* Box/object icon */
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 8v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8l9-4 9 4z" />
-                            <path d="M12 4v16M3 8h18" />
-                          </svg>
-                        )
-                      ) : (
-                        /* Empty chair icon */
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="6" y="11" width="12" height="10" rx="2" />
-                          <path d="M5 19h14M10 5v6M14 5v6" />
+                Chair Status
+              </h2>
+              <div className="grid grid-cols-2 gap-5">
+                <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+                  darkMode 
+                    ? 'bg-gray-800 border-gray-700' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Occupancy
+                  </p>
+                  <div className="mt-4 flex flex-col items-center">
+                    {chairData.isOccupied ? (
+                      chairData.isPersonSitting ? (
+                        /* Person sitting icon */
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 ${
+                          darkMode ? 'text-blue-400' : 'text-blue-600'
+                        }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="7" r="4" />
+                          <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+                          <rect x="8" y="15" width="8" height="6" rx="1" />
                         </svg>
-                      )}
-                      <p className="mt-2 text-lg font-medium text-gray-800">
-                        {chairData.isOccupied ? 
-                          chairData.isPersonSitting ? 'Person Sitting' : 'Object Placed' 
-                          : 'Empty'}
+                      ) : (
+                        /* Box/object icon */
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 ${
+                          darkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 8v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8l9-4 9 4z" />
+                          <path d="M12 4v16M3 8h18" />
+                        </svg>
+                      )
+                    ) : (
+                      /* Empty chair icon */
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 ${
+                        darkMode ? 'text-gray-500' : 'text-gray-400'
+                      }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="6" y="11" width="12" height="10" rx="2" />
+                        <path d="M5 19h14M10 5v6M14 5v6" />
+                      </svg>
+                    )}
+                    <p className={`mt-3 text-lg font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                      {chairData.isOccupied ? 
+                        chairData.isPersonSitting ? 'Person Sitting' : 'Object Placed' 
+                        : 'Empty'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+                  darkMode 
+                    ? 'bg-gray-800 border-gray-700' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Weight
+                  </p>
+                  <div className="mt-4 flex flex-col items-center">
+                    <div className={`relative w-28 h-28 flex items-center justify-center rounded-full mb-2 shadow-inner ${
+                      darkMode ? 'bg-blue-900 bg-opacity-30' : 'bg-blue-100'
+                    }`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 absolute opacity-30 ${
+                        darkMode ? 'text-blue-400' : 'text-blue-500'
+                      }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                        <line x1="7" y1="7" x2="7.01" y2="7" />
+                      </svg>
+                      <p className={`text-2xl font-bold z-10 ${
+                        darkMode ? 'text-blue-300' : 'text-blue-800'
+                      }`}>
+                        {(chairData.sensor_data.weight_kg).toFixed(0) || '0'}
                       </p>
                     </div>
-                  </div>
-                  
-                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                    <p className="text-sm text-gray-600">Weight</p>
-                    <div className="mt-4 flex flex-col items-center">
-                      <div className="relative w-24 h-24 flex items-center justify-center rounded-full bg-blue-100 mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-blue-500 absolute" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                          <line x1="7" y1="7" x2="7.01" y2="7" />
-                        </svg>
-                        <p className="text-xl font-bold text-blue-800 z-10">
-                          {(chairData.sensor_data.weight_kg).toFixed(0) || '0'}
-                        </p>
-                      </div>
-                      <p className="text-base text-gray-600">kg</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Sitting Position Card */}
-              <div className="p-6 bg-white rounded-lg shadow border border-gray-100">
-                <h2 className="mb-4 text-lg font-semibold text-gray-800 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Sitting Position
-                </h2>
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  {chairData.isPersonSitting ? (
-                    <div className="flex flex-col items-center">
-                      {/* Visual representation of sitting position */}
-                      <div className="w-40 h-40 relative bg-blue-50 rounded-lg mb-4 flex items-center justify-center">
-                        {/* Chair outline */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-32 h-32 text-blue-200" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="25" y="60" width="50" height="30" rx="2" />
-                          <path d="M30 60 V40 H70 V60" />
-                          <path d="M30 50 H70" />
-                        </svg>
-                        
-                        {/* Person representation based on sensor data */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-28 h-28 absolute" viewBox="0 0 100 100">
-                          {/* Head */}
-                          <circle cx="50" cy="35" r="10" fill={chairData.isPersonSitting ? "#3B82F6" : "transparent"} />
-                          
-                          {/* Torso */}
-                          <path d={`M50 45 L50 ${chairData.sittingPosition === 'Forward Slouch' ? '75' : '65'}`} stroke="#3B82F6" strokeWidth="4" />
-                          
-                          {/* Left arm */}
-                          <path d={`M50 50 L${chairData.sensor_data.left_armrest ? '30' : '40'} ${chairData.sensor_data.left_armrest ? '45' : '55'}`} stroke={chairData.sensor_data.left_armrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
-                          
-                          {/* Right arm */}
-                          <path d={`M50 50 L${chairData.sensor_data.right_armrest ? '70' : '60'} ${chairData.sensor_data.right_armrest ? '45' : '55'}`} stroke={chairData.sensor_data.right_armrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
-                          
-                          {/* Left leg */}
-                          <path d={`M50 65 L${chairData.sensor_data.left_legrest ? '40' : '45'} 85`} stroke={chairData.sensor_data.left_legrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
-                          
-                          {/* Right leg */}
-                          <path d={`M50 65 L${chairData.sensor_data.right_legrest ? '60' : '55'} 85`} stroke={chairData.sensor_data.right_legrest ? "#3B82F6" : "#93C5FD"} strokeWidth="4" />
-                        </svg>
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-lg font-medium text-gray-800 mb-2">
-                          {chairData.sittingPosition || 'Normal'}
-                        </p>
-                        
-                        <div className="flex flex-wrap gap-2 justify-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.left_armrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Left Arm {chairData.sensor_data.left_armrest ? 'Active' : 'Inactive'}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.right_armrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Right Arm {chairData.sensor_data.right_armrest ? 'Active' : 'Inactive'}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.left_legrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Left Leg {chairData.sensor_data.left_legrest ? 'Active' : 'Inactive'}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${chairData.sensor_data.right_legrest ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
-                            Right Leg {chairData.sensor_data.right_legrest ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {chairData.positionWarning && (
-                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-100 rounded-lg flex items-start">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                          </svg>
-                          <p className="text-sm text-yellow-700">{chairData.positionWarning}</p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                      </svg>
-                      <p className="text-gray-500">No sitting position data available</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {chairData && (
-                <PressureDistribution 
-                  sensorData={chairData} 
-                />
-              )}
-            </div>
-            
-            {/* Usage Statistics Card */}
-            <div className="p-6 bg-white rounded-lg shadow border border-gray-100">
-              <h2 className="mb-4 text-lg font-semibold text-gray-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Usage Statistics
-              </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <p className="text-sm text-gray-600">Current session</p>
-                  <div className="mt-2 flex items-end">
-                    <p className="text-2xl font-semibold text-blue-600">
-                      {currentSessionMinutes}:{currentSessionSeconds.toString().padStart(2, '0')}
-                    </p>
-                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">min:sec</span>
-                  </div>
-                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ 
-                      width: `${Math.min(((currentSessionMinutes * 60 + currentSessionSeconds) / (10 * 60)) * 100, 100)}%` 
-                    }}></div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <p className="text-sm text-gray-600">Today's sitting time</p>
-                  <div className="mt-2 flex items-end">
-                    <p className="text-2xl font-semibold text-blue-600">
-                      {Math.floor(totalMinutes)}:{Math.floor((totalMinutes * 60) % 60).toString().padStart(2, '0')}
-                    </p>
-                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">hr:min</span>
-                  </div>
-                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((totalMinutes / 120) * 100, 100)}%` }}></div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <p className="text-sm text-gray-600">Position Changes</p>
-                  <div className="mt-2 flex items-end">
-                    <p className="text-2xl font-semibold text-blue-600">
-                      {chairData.positionChanges || 0}
-                    </p>
-                    <span className="text-sm font-normal text-gray-600 ml-1 mb-1">today</span>
-                  </div>
-                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min((chairData.positionChanges || 0) * 5, 100)}%` }}></div>
+                    <p className={`text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>kg</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Recommendations */}
-            <div className="p-6 bg-blue-50 rounded-lg border border-blue-100">
-              <h2 className="mb-4 text-lg font-semibold text-blue-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            {/* Sitting Position Card - Enhanced Visualization */}
+            <div className={`p-6 rounded-lg shadow-md border ${
+              darkMode 
+                ? 'bg-gray-700 border-gray-600' 
+                : 'bg-white border-gray-200'
+            }`}>
+              <h2 className={`mb-5 text-lg font-semibold flex items-center ${
+                darkMode ? 'text-gray-100' : 'text-gray-800'
+              }`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+                  darkMode ? 'text-blue-400' : 'text-blue-600'
+                }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Health Recommendations
+                Sitting Position
               </h2>
+              <div className={`p-5 rounded-lg border shadow-sm ${
+                darkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                {chairData.isPersonSitting ? (
+                  <div className="flex flex-col items-center">
+                    {/* Visual representation of sitting position */}
+                    <div className={`w-44 h-44 relative rounded-lg mb-5 flex items-center justify-center shadow-inner ${
+                      darkMode ? 'bg-blue-900 bg-opacity-20' : 'bg-blue-50'
+                    }`}>
+                      {/* Chair outline */}
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`w-36 h-36 ${
+                        darkMode ? 'text-blue-800' : 'text-blue-200'
+                      }`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="25" y="60" width="50" height="30" rx="2" />
+                        <path d="M30 60 V40 H70 V60" />
+                        <path d="M30 50 H70" />
+                      </svg>
+                      
+                      {/* Person representation based on sensor data */}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-32 h-32 absolute" viewBox="0 0 100 100">
+                        {/* Head */}
+                        <circle cx="50" cy="35" r="10" fill={chairData.isPersonSitting ? (darkMode ? "#60A5FA" : "#3B82F6") : "transparent"} />
+                        
+                        {/* Torso */}
+                        <path d={`M50 45 L50 ${chairData.sittingPosition === 'Forward Slouch' ? '75' : '65'}`} stroke={darkMode ? "#60A5FA" : "#3B82F6"} strokeWidth="4" />
+                        
+                        {/* Left arm */}
+                        <path d={`M50 50 L${chairData.sensor_data.left_armrest ? '30' : '40'} ${chairData.sensor_data.left_armrest ? '45' : '55'}`} 
+                          stroke={chairData.sensor_data.left_armrest ? 
+                            (darkMode ? "#60A5FA" : "#3B82F6") : 
+                            (darkMode ? "#93C5FD" : "#93C5FD")} 
+                          strokeWidth="4" />
+                        
+                        {/* Right arm */}
+                        <path d={`M50 50 L${chairData.sensor_data.right_armrest ? '70' : '60'} ${chairData.sensor_data.right_armrest ? '45' : '55'}`} 
+                          stroke={chairData.sensor_data.right_armrest ? 
+                            (darkMode ? "#60A5FA" : "#3B82F6") : 
+                            (darkMode ? "#93C5FD" : "#93C5FD")} 
+                          strokeWidth="4" />
+                        
+                        {/* Left leg */}
+                        <path d={`M50 65 L${chairData.sensor_data.left_legrest ? '40' : '45'} 85`} 
+                          stroke={chairData.sensor_data.left_legrest ? 
+                            (darkMode ? "#60A5FA" : "#3B82F6") : 
+                            (darkMode ? "#93C5FD" : "#93C5FD")} 
+                          strokeWidth="4" />
+                        
+                        {/* Right leg */}
+                        <path d={`M50 65 L${chairData.sensor_data.right_legrest ? '60' : '55'} 85`} 
+                          stroke={chairData.sensor_data.right_legrest ? 
+                            (darkMode ? "#60A5FA" : "#3B82F6") : 
+                            (darkMode ? "#93C5FD" : "#93C5FD")} 
+                          strokeWidth="4" />
+                      </svg>
+                    </div>
+                    
+                    <div className="text-center">
+                      <p className={`text-lg font-medium mb-2 ${
+                        darkMode ? 'text-gray-100' : 'text-gray-800'
+                      }`}>
+                        {chairData.sittingPosition || 'Normal'}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          chairData.sensor_data.left_armrest ? 
+                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                        }`}>
+                          Left Arm {chairData.sensor_data.left_armrest ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          chairData.sensor_data.right_armrest ? 
+                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                        }`}>
+                          Right Arm {chairData.sensor_data.right_armrest ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          chairData.sensor_data.left_legrest ? 
+                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                        }`}>
+                          Left Leg {chairData.sensor_data.left_legrest ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          chairData.sensor_data.right_legrest ? 
+                            (darkMode ? 'bg-blue-900 bg-opacity-50 text-blue-300' : 'bg-blue-100 text-blue-800') : 
+                            (darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')
+                        }`}>
+                          Right Leg {chairData.sensor_data.right_legrest ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {chairData.positionWarning && (
+                      <div className={`mt-4 p-3 border rounded-lg flex items-start ${
+                        darkMode 
+                          ? 'bg-yellow-900 bg-opacity-30 border-yellow-800 text-yellow-300' 
+                          : 'bg-yellow-50 border-yellow-100 text-yellow-700'
+                      }`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
+                          darkMode ? 'text-yellow-400' : 'text-yellow-500'
+                        }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <p className="text-sm">{chairData.positionWarning}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-6 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-20 w-20 mx-auto mb-3 ${
+                      darkMode ? 'text-gray-500' : 'text-gray-400'
+                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg>
+                    <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                      No sitting position data available
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Pressure Distribution Component */}
+            {chairData && (
+              <PressureDistribution 
+                sensorData={chairData} 
+                darkMode={darkMode}
+              />
+            )}
+          </div>
+          
+          {/* Usage Statistics Card - Enhanced Design */}
+          <div className={`p-6 rounded-lg shadow-md border ${
+            darkMode 
+              ? 'bg-gray-700 border-gray-600' 
+              : 'bg-white border-gray-200'
+          }`}>
+            <h2 className={`mb-5 text-lg font-semibold flex items-center ${
+              darkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+                darkMode ? 'text-blue-400' : 'text-blue-600'
+              }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Usage Statistics
+            </h2>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+                darkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Current session
+                </p>
+                <div className="mt-3 flex items-end">
+                  <p className={`text-2xl font-semibold ${
+                    darkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`}>
+                    {currentSessionMinutes}:{currentSessionSeconds.toString().padStart(2, '0')}
+                  </p>
+                  <span className={`text-sm font-normal ml-1 mb-1 ${
+                    darkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>min:sec</span>
+                </div>
+                <div className={`mt-3 w-full rounded-full h-3 ${
+                  darkMode ? 'bg-gray-600' : 'bg-gray-200'
+                }`}>
+                  <div className={`h-3 rounded-full ${
+                    darkMode ? 'bg-blue-500' : 'bg-blue-600'
+                  }`} style={{ 
+                    width: `${Math.min(((currentSessionMinutes * 60 + currentSessionSeconds) / (10 * 60)) * 100, 100)}%` 
+                  }}></div>
+                </div>
+              </div>
               
-              <div className="space-y-4">
-                {chairData.isPersonSitting && chairData.minutes > 120 && (
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-md font-medium text-blue-800">Take a Break</h3>
-                      <p className="text-sm text-blue-700">You've been sitting for {chairData.minutes} minutes today. Consider taking a 5-minute break to stretch and move around.</p>
-                    </div>
-                  </div>
-                )}
-                  
-                {chairData.isPersonSitting && chairData.positionChanges < 5 && chairData.hours > 1 && (
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-md font-medium text-blue-800">Change Position</h3>
-                      <p className="text-sm text-blue-700">Try to shift positions more frequently. Aim for at least 8-10 position changes per hour to improve circulation.</p>
-                    </div>
-                  </div>
-                )}
-                
-                {chairData.positionWarning && (
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-md font-medium text-blue-800">Improve Posture</h3>
-                      <p className="text-sm text-blue-700">{chairData.positionWarning} A balanced posture can reduce strain on your back and neck.</p>
-                    </div>
-                  </div>
-                )}
-                
-                {chairData.avgDailyHours > 5 && (
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-md font-medium text-blue-800">Reduce Sitting Time</h3>
-                      <p className="text-sm text-blue-700">Your average daily sitting time of {chairData.avgDailyHours} hours is high. Try to incorporate more standing or walking activities throughout your day.</p>
-                    </div>
-                  </div>
-                )}
-                
-                {!chairData.isPersonSitting && chairData.hours > 0 && (
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-md font-medium text-blue-800">Good Job!</h3>
-                      <p className="text-sm text-blue-700">You're currently taking a break from sitting. Keep up the good work by staying active!</p>
-                    </div>
-                  </div>
-                )}
-                
-                {chairData.hours === 0 && (
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-blue-200 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-md font-medium text-blue-800">Ready to Start</h3>
-                      <p className="text-sm text-blue-700">No sitting data recorded today. Remember to take breaks every 30 minutes when you start using the chair.</p>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Manual Task Button */}
-                <ManualTaskButton />
+              <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+                darkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Today's sitting time
+                </p>
+                <div className="mt-3 flex items-end">
+                  <p className={`text-2xl font-semibold ${
+                    darkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`}>
+                    {Math.floor(totalMinutes)}:{Math.floor((totalMinutes * 60) % 60).toString().padStart(2, '0')}
+                  </p>
+                  <span className={`text-sm font-normal ml-1 mb-1 ${
+                    darkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>hr:min</span>
+                </div>
+                <div className={`mt-3 w-full rounded-full h-3 ${
+                  darkMode ? 'bg-gray-600' : 'bg-gray-200'
+                }`}>
+                  <div className={`h-3 rounded-full ${
+                    darkMode ? 'bg-blue-500' : 'bg-blue-600'
+                  }`} style={{ width: `${Math.min((totalMinutes / 120) * 100, 100)}%` }}></div>
+                </div>
+              </div>
+              
+              <div className={`p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-300 ${
+                darkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Position Changes
+                </p>
+                <div className="mt-3 flex items-end">
+                  <p className={`text-2xl font-semibold ${
+                    darkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`}>
+                    {chairData.positionChanges || 0}
+                  </p>
+                  <span className={`text-sm font-normal ml-1 mb-1 ${
+                    darkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>today</span>
+                </div>
+                <div className={`mt-3 w-full rounded-full h-3 ${
+                  darkMode ? 'bg-gray-600' : 'bg-gray-200'
+                }`}>
+                  <div className={`h-3 rounded-full ${
+                    darkMode ? 'bg-blue-500' : 'bg-blue-600'
+                  }`} style={{ width: `${Math.min((chairData.positionChanges || 0) * 5, 100)}%` }}></div>
+                </div>
               </div>
             </div>
           </div>
-        )}
+          
+          {/* Recommendations - Enhanced Card Design */}
+          <div className={`p-6 rounded-lg shadow-md border ${
+            darkMode 
+              ? 'bg-blue-900 bg-opacity-20 border-blue-800' 
+              : 'bg-blue-50 border-blue-200'
+          }`}>
+            <h2 className={`mb-5 text-lg font-semibold flex items-center ${
+              darkMode ? 'text-blue-300' : 'text-blue-800'
+            }`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${
+                darkMode ? 'text-blue-400' : 'text-blue-600'
+              }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Health Recommendations
+            </h2>
+            
+            <div className="space-y-5">
+              {chairData.isPersonSitting && chairData.minutes > 120 && (
+                <div className={`flex items-start p-4 rounded-lg border ${
+                  darkMode 
+                    ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
+                    : 'bg-white bg-opacity-70 border-blue-100'
+                }`}>
+                  <div className={`flex-shrink-0 rounded-full p-2 mr-4 ${
+                    darkMode ? 'bg-blue-900' : 'bg-blue-200'
+                  }`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${
+                      darkMode ? 'text-blue-400' : 'text-blue-600'
+                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className={`text-md font-medium ${
+                      darkMode ? 'text-blue-300' : 'text-blue-800'
+                    }`}>Take a Break</h3>
+                    <p className={`text-sm ${
+                      darkMode ? 'text-blue-200' : 'text-blue-700'
+                    }`}>You've been sitting for {chairData.minutes} minutes today. Consider taking a 5-minute break to stretch and move around.</p>
+                  </div>
+                </div>
+              )}
+                  
+              {chairData.isPersonSitting && chairData.positionChanges < 5 && chairData.hours > 1 && (
+                <div className={`flex items-start p-4 rounded-lg border ${
+                  darkMode 
+                    ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
+                    : 'bg-white bg-opacity-70 border-blue-100'
+                }`}>
+                  <div className={`flex-shrink-0 rounded-full p-2 mr-4 ${
+                    darkMode ? 'bg-blue-900' : 'bg-blue-200'
+                  }`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${
+                      darkMode ? 'text-blue-400' : 'text-blue-600'
+                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className={`text-md font-medium ${
+                      darkMode ? 'text-blue-300' : 'text-blue-800'
+                    }`}>Change Position</h3>
+                    <p className={`text-sm ${
+                      darkMode ? 'text-blue-200' : 'text-blue-700'
+                    }`}>Try to shift positions more frequently. Aim for at least 8-10 position changes per hour to improve circulation.</p>
+                  </div>
+                </div>
+              )}
+              
+              {chairData.positionWarning && (
+                <div className={`flex items-start p-4 rounded-lg border ${
+                  darkMode 
+                    ? 'bg-gray-800 bg-opacity-70 border-blue-900' 
+                    : 'bg-white bg-opacity-70 border-blue-100'
+                }`}>
+                  <div className={`flex-shrink-0 rounded-full p-2 mr-4 ${
+                    darkMode ? 'bg-blue-900' : 'bg-blue-200'
+                  }`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${
+                      darkMode ? 'text-blue-400' : 'text-blue-600'
+                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className={`text-md font-medium ${
+                      darkMode ? 'text-blue-300' : 'text-blue-800'
+                    }`}>Improve Posture</h3>
+                    <p className={`text-sm ${
+                      darkMode ? 'text-blue-200' : 'text-blue-700'
+                    }`}>{chairData.positionWarning} A balanced posture can reduce strain on your back and neck.</p>
+                  </div>
+                </div>
+              )}
+              
+              {!aiModeEnabled && (
+              <div className="mt-6 flex justify-center">
+                <ManualTaskButton />
+                {/* <PressureDistribution sensorData={chairData} darkMode={darkMode}/> */}
+              </div>
+            )}
+            </div>
+          </div>
+        </div>
         
         {/* Task Modal */}
         <TaskModal />
       </div>
     </div>
-  ); 
-}; 
+  );
+};
 
 export default ChairMonitor;
